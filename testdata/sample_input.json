@@ -1,0 +1,119 @@
+{
+  "items": [
+    {
+      "id": "ashwagandha",
+      "name": "Ashwagandha KSM-66",
+      "dosage_per_unit": 300,
+      "unit": "mg",
+      "max_stock_days": 180
+    },
+    {
+      "id": "vitamin-d",
+      "name": "Vitamin D3",
+      "dosage_per_unit": 5000,
+      "unit": "mcg",
+      "max_stock_days": 365
+    },
+    {
+      "id": "omega-3",
+      "name": "Omega-3 Fish Oil",
+      "dosage_per_unit": 1000,
+      "unit": "mg",
+      "max_stock_days": 120
+    },
+    {
+      "id": "magnesium",
+      "name": "Magnesium Glycinate",
+      "dosage_per_unit": 200,
+      "unit": "mg",
+      "max_stock_days": 180
+    }
+  ],
+  "products": [
+    {
+      "id": "ash-60",
+      "item_id": "ashwagandha",
+      "capsules_per_box": 60
+    },
+    {
+      "id": "ash-120",
+      "item_id": "ashwagandha",
+      "capsules_per_box": 120
+    },
+    {
+      "id": "vitd-120",
+      "item_id": "vitamin-d",
+      "capsules_per_box": 120
+    },
+    {
+      "id": "omega-90",
+      "item_id": "omega-3",
+      "capsules_per_box": 90
+    },
+    {
+      "id": "omega-180",
+      "item_id": "omega-3",
+      "capsules_per_box": 180
+    },
+    {
+      "id": "mag-120",
+      "item_id": "magnesium",
+      "capsules_per_box": 120
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "nootropicsdepot",
+      "name": "Nootropics Depot",
+      "catalog": [
+        { "product_id": "ash-60", "price": 14.99, "currency": "USD", "delivery_days": 5 },
+        { "product_id": "ash-120", "price": 24.99, "currency": "USD", "delivery_days": 5 },
+        { "product_id": "mag-120", "price": 19.99, "currency": "USD", "delivery_days": 5 }
+      ]
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "catalog": [
+        { "product_id": "ash-60", "price": 17.50, "currency": "USD", "delivery_days": 2 },
+        { "product_id": "vitd-120", "price": 12.99, "currency": "USD", "delivery_days": 2 },
+        { "product_id": "omega-90", "price": 18.99, "currency": "USD", "delivery_days": 2 },
+        { "product_id": "omega-180", "price": 32.99, "currency": "USD", "delivery_days": 2 },
+        { "product_id": "mag-120", "price": 22.50, "currency": "USD", "delivery_days": 2 }
+      ]
+    }
+  ],
+  "consumption_plans": [
+    {
+      "item_id": "ashwagandha",
+      "dosage": 600,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "vitamin-d",
+      "dosage": 5000,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "omega-3",
+      "dosage": 2000,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "magnesium",
+      "dosage": 400,
+      "frequency": "* * *",
+      "times_per_day": 1
+    }
+  ],
+  "current_stock": [
+    { "item_id": "ashwagandha", "capsules": 45 },
+    { "item_id": "vitamin-d", "capsules": 90 },
+    { "item_id": "omega-3", "capsules": 30 },
+    { "item_id": "magnesium", "capsules": 60 }
+  ],
+  "headroom_days": 7
+}
