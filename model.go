@@ -57,7 +57,7 @@ type StockEntry struct {
 type Input struct {
 	Items            []Item            `json:"items"`
 	Products         []Product         `json:"products"`
-	Suppliers        []Supplier        `json:"suppliers"` // index 0 = highest priority
+	Suppliers        []Supplier        `json:"suppliers"`
 	ConsumptionPlans []ConsumptionPlan `json:"consumption_plans"`
 	CurrentStock     []StockEntry      `json:"current_stock"`
 	HeadroomDays     int               `json:"headroom_days"`
@@ -85,12 +85,23 @@ type ItemPlan struct {
 	CurrentCapsules int
 }
 
-type SupplierProductChoice struct {
+// SelectionStrategy determines how products and suppliers are chosen.
+type SelectionStrategy int
+
+const (
+	StrategyPreferred SelectionStrategy = iota // first matching product in array order, cheapest supplier
+	StrategyCheapest                           // lowest cost per dose across all product+supplier combos
+	StrategyFastest                            // shortest delivery time, tie-break by cost
+)
+
+type ProductSupplierChoice struct {
 	Product       Product
+	Supplier      Supplier
 	CatalogEntry  CatalogEntry
 	MaxBoxes      int
 	MaxSupplyDays float64
 	DaysPerBox    float64
+	CostPerDose   float64
 }
 
 // ---------- Output types ----------

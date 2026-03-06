@@ -63,112 +63,148 @@ func BuildItemPlans(input Input, effectiveStock map[string]int) ([]ItemPlan, []S
 	return plans, errs
 }
 
-// SelectBestProduct picks the product for an item at a supplier that maximizes max_supply_days.
-func SelectBestProduct(itemPlan ItemPlan, products []Product, catalog []CatalogEntry) *SupplierProductChoice {
-	// Index catalog by product ID.
-	catByProd := make(map[string]CatalogEntry, len(catalog))
-	for _, ce := range catalog {
-		catByProd[ce.ProductID] = ce
+// computeProductMetrics calculates supply metrics for a product given an item's consumption rate.
+func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, supplier Supplier) ProductSupplierChoice {
+	daysPerBox := float64(product.CapsulesPerBox) / itemPlan.ConsumptionRate
+	maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.ConsumptionRate / float64(product.CapsulesPerBox)))
+	if maxBoxes < 1 {
+		maxBoxes = 1
+	}
+	maxSupplyDays := float64(maxBoxes*product.CapsulesPerBox) / itemPlan.ConsumptionRate
+	costPerCapsule := ce.Price / float64(product.CapsulesPerBox)
+	costPerDose := costPerCapsule * float64(itemPlan.CapsulesPerDose)
+
+	return ProductSupplierChoice{
+		Product:       product,
+		Supplier:      supplier,
+		CatalogEntry:  ce,
+		MaxBoxes:      maxBoxes,
+		MaxSupplyDays: maxSupplyDays,
+		DaysPerBox:    daysPerBox,
+		CostPerDose:   costPerDose,
+	}
+}
+
+// SelectProductAndSupplier picks the best product+supplier for an item using the given strategy.
+// Products are implicitly prioritized by their order in the products array.
+func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers []Supplier, strategy SelectionStrategy) *ProductSupplierChoice {
+	if itemPlan.ConsumptionRate <= 0 {
+		return nil
 	}
 
-	var best *SupplierProductChoice
-
-	for _, prod := range products {
-		if prod.ItemID != itemPlan.Item.ID {
-			continue
-		}
-		ce, ok := catByProd[prod.ID]
-		if !ok {
-			continue
-		}
-		if itemPlan.ConsumptionRate <= 0 {
-			continue
-		}
-
-		daysPerBox := float64(prod.CapsulesPerBox) / itemPlan.ConsumptionRate
-		maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.ConsumptionRate / float64(prod.CapsulesPerBox)))
-		if maxBoxes < 1 {
-			maxBoxes = 1
-		}
-		maxSupplyDays := float64(maxBoxes*prod.CapsulesPerBox) / itemPlan.ConsumptionRate
-
-		choice := &SupplierProductChoice{
-			Product:       prod,
-			CatalogEntry:  ce,
-			MaxBoxes:      maxBoxes,
-			MaxSupplyDays: maxSupplyDays,
-			DaysPerBox:    daysPerBox,
-		}
-
-		if best == nil || maxSupplyDays > best.MaxSupplyDays {
-			best = choice
-		} else if maxSupplyDays == best.MaxSupplyDays {
-			// Tie-break: lower price per capsule.
-			bestPPC := best.CatalogEntry.Price / float64(best.Product.CapsulesPerBox)
-			choicePPC := ce.Price / float64(prod.CapsulesPerBox)
-			if choicePPC < bestPPC {
-				best = choice
-			}
+	// Build a catalog index: product_id -> [(supplier, catalog_entry)]
+	type supplierOffer struct {
+		Supplier     Supplier
+		CatalogEntry CatalogEntry
+	}
+	offersByProduct := make(map[string][]supplierOffer)
+	for _, sup := range suppliers {
+		for _, ce := range sup.Catalog {
+			offersByProduct[ce.ProductID] = append(offersByProduct[ce.ProductID], supplierOffer{sup, ce})
 		}
 	}
 
-	return best
-}
-
-type supplierAssignment struct {
-	Supplier Supplier
-	ItemPlan ItemPlan
-	Choice   SupplierProductChoice
-}
-
-// BuildSchedule constructs a single schedule using the given supplier priority order.
-func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPlan, products []Product, headroomDays int, today time.Time) Schedule {
-	// Phase 1: Assign items to suppliers.
-	assigned := make(map[string]supplierAssignment)
-	var schedErrors []ScheduleError
-
-	for _, sup := range supplierOrder {
-		for _, ip := range itemPlans {
-			if _, ok := assigned[ip.Item.ID]; ok {
-				continue // already assigned
+	switch strategy {
+	case StrategyPreferred:
+		// Walk products in array order (user's priority). Pick the first product
+		// that has any supplier, then choose the cheapest supplier for it.
+		for _, prod := range products {
+			if prod.ItemID != itemPlan.Item.ID {
+				continue
 			}
-			choice := SelectBestProduct(ip, products, sup.Catalog)
-			if choice != nil {
-				assigned[ip.Item.ID] = supplierAssignment{
-					Supplier: sup,
-					ItemPlan: ip,
-					Choice:   *choice,
+			offers := offersByProduct[prod.ID]
+			if len(offers) == 0 {
+				continue
+			}
+			// Pick cheapest supplier for this product.
+			var best *ProductSupplierChoice
+			for _, o := range offers {
+				choice := computeProductMetrics(itemPlan, prod, o.CatalogEntry, o.Supplier)
+				if best == nil || choice.CostPerDose < best.CostPerDose {
+					best = &choice
+				}
+			}
+			return best
+		}
+		return nil
+
+	case StrategyCheapest:
+		// Find the product+supplier combo with the lowest cost per dose.
+		var best *ProductSupplierChoice
+		for _, prod := range products {
+			if prod.ItemID != itemPlan.Item.ID {
+				continue
+			}
+			for _, o := range offersByProduct[prod.ID] {
+				choice := computeProductMetrics(itemPlan, prod, o.CatalogEntry, o.Supplier)
+				if best == nil || choice.CostPerDose < best.CostPerDose {
+					best = &choice
 				}
 			}
 		}
+		return best
+
+	case StrategyFastest:
+		// Find the product+supplier combo with shortest delivery, tie-break by cost.
+		var best *ProductSupplierChoice
+		for _, prod := range products {
+			if prod.ItemID != itemPlan.Item.ID {
+				continue
+			}
+			for _, o := range offersByProduct[prod.ID] {
+				choice := computeProductMetrics(itemPlan, prod, o.CatalogEntry, o.Supplier)
+				if best == nil ||
+					choice.CatalogEntry.DeliveryDays < best.CatalogEntry.DeliveryDays ||
+					(choice.CatalogEntry.DeliveryDays == best.CatalogEntry.DeliveryDays && choice.CostPerDose < best.CostPerDose) {
+					best = &choice
+				}
+			}
+		}
+		return best
 	}
 
-	// Items that couldn't be assigned.
+	return nil
+}
+
+type itemAssignment struct {
+	ItemPlan ItemPlan
+	Choice   ProductSupplierChoice
+}
+
+// BuildSchedule constructs a single schedule using the given selection strategy.
+func BuildSchedule(scheduleID int, description string, itemPlans []ItemPlan, products []Product, suppliers []Supplier, headroomDays int, today time.Time, strategy SelectionStrategy) Schedule {
+	// Phase 1: Select product+supplier for each item.
+	var assignments []itemAssignment
+	var schedErrors []ScheduleError
+
 	for _, ip := range itemPlans {
-		if _, ok := assigned[ip.Item.ID]; !ok {
+		choice := SelectProductAndSupplier(ip, products, suppliers, strategy)
+		if choice == nil {
 			schedErrors = append(schedErrors, ScheduleError{
 				ItemID:  ip.Item.ID,
-				Message: "no supplier carries a product for this item",
+				Message: "no product+supplier available for this item",
 			})
+			continue
 		}
+		assignments = append(assignments, itemAssignment{ItemPlan: ip, Choice: *choice})
 	}
 
-	// Group assignments by supplier.
+	// Phase 2: Group assignments by supplier.
 	type supplierGroup struct {
 		Supplier    Supplier
-		Assignments []supplierAssignment
+		Assignments []itemAssignment
 	}
 	groupMap := make(map[string]*supplierGroup)
-	for _, a := range assigned {
-		g, ok := groupMap[a.Supplier.ID]
+	for _, a := range assignments {
+		g, ok := groupMap[a.Choice.Supplier.ID]
 		if !ok {
-			g = &supplierGroup{Supplier: a.Supplier}
-			groupMap[a.Supplier.ID] = g
+			g = &supplierGroup{Supplier: a.Choice.Supplier}
+			groupMap[a.Choice.Supplier.ID] = g
 		}
 		g.Assignments = append(g.Assignments, a)
 	}
 
-	// Deterministic order: by supplier ID.
+	// Deterministic order by supplier ID.
 	var groups []*supplierGroup
 	for _, g := range groupMap {
 		groups = append(groups, g)
@@ -192,7 +228,7 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 	}
 
 	for _, g := range groups {
-		// Phase 2: Compute checkout interval = min(maxSupplyDays) across items.
+		// Checkout interval = min(maxSupplyDays) across items at this supplier.
 		checkoutInterval := math.Inf(1)
 		for _, a := range g.Assignments {
 			if a.Choice.MaxSupplyDays < checkoutInterval {
@@ -204,9 +240,9 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 			intervalDays = 1
 		}
 
-		// Phase 3: Compute boxes per checkout for each item.
+		// Boxes per checkout for each item.
 		type itemOrder struct {
-			Assignment supplierAssignment
+			Assignment itemAssignment
 			Boxes      int
 		}
 		var orders []itemOrder
@@ -222,14 +258,10 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 			orders = append(orders, itemOrder{Assignment: a, Boxes: boxes})
 		}
 
-		// Phase 4: Initial purchase date = earliest reorder date among items.
+		// Initial purchase date = earliest reorder among this supplier's items.
 		earliestReorder := math.Inf(1)
-		maxDeliveryDays := 0
 		for _, o := range orders {
 			deliveryDays := o.Assignment.Choice.CatalogEntry.DeliveryDays
-			if deliveryDays > maxDeliveryDays {
-				maxDeliveryDays = deliveryDays
-			}
 			daysOfStock := 0.0
 			if o.Assignment.ItemPlan.ConsumptionRate > 0 {
 				daysOfStock = float64(o.Assignment.ItemPlan.CurrentCapsules) / o.Assignment.ItemPlan.ConsumptionRate
@@ -244,8 +276,7 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 		}
 		purchaseDate := today.AddDate(0, 0, int(math.Floor(earliestReorder)))
 
-		// Phase 5: Build initial purchase event.
-		var initialProducts []ProductOrder
+		// Build initial purchase event.
 		if currency == "" && len(orders) > 0 {
 			currency = orders[0].Assignment.Choice.CatalogEntry.Currency
 		}
@@ -254,9 +285,8 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 			supCurrency = orders[0].Assignment.Choice.CatalogEntry.Currency
 		}
 
+		var initialProducts []ProductOrder
 		for _, o := range orders {
-			// For initial purchase, compute how many boxes are needed to cover until
-			// the first recurring delivery arrives.
 			daysUntilPurchase := math.Floor(earliestReorder)
 			capsConsumedWaiting := o.Assignment.ItemPlan.ConsumptionRate * daysUntilPurchase
 			remainingAtPurchase := float64(o.Assignment.ItemPlan.CurrentCapsules) - capsConsumedWaiting
@@ -264,7 +294,6 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 				remainingAtPurchase = 0
 			}
 
-			// Need to cover checkout_interval + delivery_days from purchase date.
 			totalCoverageDays := float64(intervalDays) + float64(o.Assignment.Choice.CatalogEntry.DeliveryDays)
 			capsNeeded := o.Assignment.ItemPlan.ConsumptionRate*totalCoverageDays - remainingAtPurchase
 			initialBoxes := int(math.Ceil(capsNeeded / float64(o.Assignment.Choice.Product.CapsulesPerBox)))
@@ -275,15 +304,14 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 				initialBoxes = o.Assignment.Choice.MaxBoxes
 			}
 
-			po := ProductOrder{
+			initialProducts = append(initialProducts, ProductOrder{
 				ProductID:  o.Assignment.Choice.Product.ID,
 				ItemID:     o.Assignment.ItemPlan.Item.ID,
 				Quantity:   initialBoxes,
 				UnitPrice:  o.Assignment.Choice.CatalogEntry.Price,
 				TotalPrice: float64(initialBoxes) * o.Assignment.Choice.CatalogEntry.Price,
 				Currency:   o.Assignment.Choice.CatalogEntry.Currency,
-			}
-			initialProducts = append(initialProducts, po)
+			})
 		}
 
 		initialTotal := 0.0
@@ -300,18 +328,17 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 			Currency:     supCurrency,
 		})
 
-		// Phase 5b: Build recurring checkout products (same boxes every time).
+		// Recurring checkout products.
 		var recurringProducts []ProductOrder
 		for _, o := range orders {
-			po := ProductOrder{
+			recurringProducts = append(recurringProducts, ProductOrder{
 				ProductID:  o.Assignment.Choice.Product.ID,
 				ItemID:     o.Assignment.ItemPlan.Item.ID,
 				Quantity:   o.Boxes,
 				UnitPrice:  o.Assignment.Choice.CatalogEntry.Price,
 				TotalPrice: float64(o.Boxes) * o.Assignment.Choice.CatalogEntry.Price,
 				Currency:   o.Assignment.Choice.CatalogEntry.Currency,
-			}
-			recurringProducts = append(recurringProducts, po)
+			})
 		}
 
 		recurringTotal := 0.0
@@ -320,7 +347,7 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 		}
 		recurringTotal = math.Round(recurringTotal*100) / 100
 
-		// Generate concrete recurring dates.
+		// Generate concrete recurring dates up to horizon.
 		horizon := today.AddDate(0, 0, maxStockDays)
 		for n := 1; ; n++ {
 			d := purchaseDate.AddDate(0, 0, intervalDays*n)
@@ -337,18 +364,18 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 			})
 		}
 
-		// Phase 6: Summary contributions.
+		// Summary contributions.
 		checkoutsPerMonth := avgDaysPerMonth / float64(intervalDays)
 		totalMonthlyCost += recurringTotal * checkoutsPerMonth
 
 		for _, o := range orders {
-			costPerCapsule := o.Assignment.Choice.CatalogEntry.Price / float64(o.Assignment.Choice.Product.CapsulesPerBox)
-			pricePerDose[o.Assignment.ItemPlan.Item.ID] = math.Round(costPerCapsule*float64(o.Assignment.ItemPlan.CapsulesPerDose)*100) / 100
+			pricePerDose[o.Assignment.ItemPlan.Item.ID] = math.Round(o.Assignment.Choice.CostPerDose*100) / 100
 		}
 	}
 
 	return Schedule{
 		ID:                 scheduleID,
+		Description:        description,
 		InitialPurchases:   initialPurchases,
 		RecurringCheckouts: recurringCheckouts,
 		Summary: ScheduleSummary{
@@ -360,33 +387,21 @@ func BuildSchedule(scheduleID int, supplierOrder []Supplier, itemPlans []ItemPla
 	}
 }
 
-// BuildAllSchedules generates one schedule per supplier rotation.
+// BuildAllSchedules generates three schedules: preferred, cheapest, fastest.
 func BuildAllSchedules(input Input, itemPlans []ItemPlan, today time.Time) []Schedule {
-	n := len(input.Suppliers)
-	if n == 0 {
-		return nil
+	strategies := []struct {
+		Strategy    SelectionStrategy
+		Description string
+	}{
+		{StrategyPreferred, "Preferred products, cheapest supplier"},
+		{StrategyCheapest, "Cheapest cost per dose"},
+		{StrategyFastest, "Fastest delivery"},
 	}
 
 	var schedules []Schedule
-	for i := 0; i < n; i++ {
-		// Rotate: start from supplier i.
-		rotated := make([]Supplier, n)
-		for j := 0; j < n; j++ {
-			rotated[j] = input.Suppliers[(i+j)%n]
-		}
-
-		desc := "Primary: " + rotated[0].Name
-		if len(rotated) > 1 {
-			desc += ", fallback: " + rotated[1].Name
-		}
-		if len(rotated) > 2 {
-			desc += ", ..."
-		}
-
-		sched := BuildSchedule(i+1, rotated, itemPlans, input.Products, input.HeadroomDays, today)
-		sched.Description = desc
+	for i, s := range strategies {
+		sched := BuildSchedule(i+1, s.Description, itemPlans, input.Products, input.Suppliers, input.HeadroomDays, today, s.Strategy)
 		schedules = append(schedules, sched)
 	}
-
 	return schedules
 }
