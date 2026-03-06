@@ -1,5 +1,22 @@
 {
   "last_run_date": "2026-03-06T00:00:00Z",
-  "stock_at_last_run": [],
-  "input_hash": "da26ad92716d920e17d05dd549f01e1cc238a2ba8c33e7ea2f3674df80c5d64c"
+  "stock_at_last_run": [
+    {
+      "item_id": "ashwagandha",
+      "capsules": 45
+    },
+    {
+      "item_id": "vitamin-d",
+      "capsules": 90
+    },
+    {
+      "item_id": "omega-3",
+      "capsules": 30
+    },
+    {
+      "item_id": "magnesium",
+      "capsules": 60
+    }
+  ],
+  "input_hash": "709eba7ad4ea0cbb344eea0bd5b55cc6f1af8c0f9cf1b547edd8a4dcee352fed"
 }

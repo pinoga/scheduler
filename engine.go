@@ -38,7 +38,6 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 			continue
 		}
 		activeFrac := ActiveDayFraction(pc)
-		dosesPerDay := float64(cp.TimesPerDay) * activeFrac
 
 		if cp.Substance != "" {
 			// Substance mode: find all items matching the substance with valid integer division.
@@ -51,7 +50,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 					continue // this item can't divide the dosage evenly
 				}
 
-				consumptionRate := float64(capsPerDose) * dosesPerDay
+				consumptionRate := float64(capsPerDose) * activeFrac
 				currentCaps := 0
 				if effectiveStock != nil {
 					currentCaps = effectiveStock[item.ID]
@@ -62,7 +61,6 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 					Plan:            cp,
 					CapsulesPerDose: capsPerDose,
 					Fraction:        1.0,
-					DosesPerDay:     dosesPerDay,
 					ConsumptionRate: consumptionRate,
 					CurrentCapsules: currentCaps,
 				})
@@ -88,7 +86,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 				continue
 			}
 
-			consumptionRate := float64(cp.CapsulesPerDose) * cp.Fraction * dosesPerDay
+			consumptionRate := float64(cp.CapsulesPerDose) * cp.Fraction * activeFrac
 			currentCaps := 0
 			if effectiveStock != nil {
 				currentCaps = effectiveStock[item.ID]
@@ -100,7 +98,6 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 					Plan:            cp,
 					CapsulesPerDose: cp.CapsulesPerDose,
 					Fraction:        cp.Fraction,
-					DosesPerDay:     dosesPerDay,
 					ConsumptionRate: consumptionRate,
 					CurrentCapsules: currentCaps,
 				}},

@@ -38,9 +38,6 @@ func LoadInput(filePath string) (Input, error) {
 	// Apply defaults.
 	for i := range input.ConsumptionPlans {
 		cp := &input.ConsumptionPlans[i]
-		if cp.TimesPerDay <= 0 {
-			cp.TimesPerDay = 1
-		}
 		// Item mode defaults.
 		if cp.ItemID != "" {
 			if cp.CapsulesPerDose <= 0 {
@@ -168,10 +165,6 @@ func ValidateInput(input Input) error {
 		if cp.Substance == "" && cp.ItemID == "" {
 			ve.add(fmt.Sprintf("%s: must set either substance or item_id", label))
 			continue
-		}
-
-		if cp.TimesPerDay <= 0 {
-			ve.add(fmt.Sprintf("%s: times_per_day must be > 0", label))
 		}
 
 		if _, err := ParseCron(cp.Frequency); err != nil {

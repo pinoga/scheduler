@@ -63,8 +63,7 @@ type ConsumptionPlan struct {
 	Fraction        float64 `json:"fraction,omitempty"`          // default 1.0
 
 	// Common fields
-	Frequency   string `json:"frequency"`    // 3-field cron: "dom month dow"
-	TimesPerDay int    `json:"times_per_day"` // defaults to 1 if omitted
+	Frequency string `json:"frequency"` // 3-field cron: "dom month dow"
 }
 
 type StockEntry struct {
@@ -99,8 +98,7 @@ type ItemPlan struct {
 	Plan            ConsumptionPlan
 	CapsulesPerDose int
 	Fraction        float64
-	DosesPerDay     float64
-	ConsumptionRate float64 // capsules per day (= capsules_per_dose * fraction * doses_per_day)
+	ConsumptionRate float64 // capsules per active day (= capsules_per_dose * fraction * active_day_fraction)
 	CurrentCapsules int
 }
 
