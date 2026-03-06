@@ -7,60 +7,109 @@ import (
 	"time"
 )
 
-// BuildItemPlans computes per-item consumption data from the input.
-// effectiveStock may be nil (first pass to get consumption rates for stock decay).
-func BuildItemPlans(input Input, effectiveStock map[string]int) ([]ItemPlan, []ScheduleError) {
+// BuildItemPlanGroups resolves consumption plans into groups of candidate ItemPlans.
+// Substance mode may produce multiple candidates (one per matching item).
+// Item mode always produces exactly one candidate.
+func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlanGroup, []ScheduleError) {
 	itemByID := make(map[string]Item, len(input.Items))
 	for _, item := range input.Items {
 		itemByID[item.ID] = item
 	}
 
-	var plans []ItemPlan
+	// Build substance -> items index.
+	itemsBySubstance := make(map[string][]Item)
+	for _, item := range input.Items {
+		if item.Substance != "" {
+			itemsBySubstance[item.Substance] = append(itemsBySubstance[item.Substance], item)
+		}
+	}
+
+	var groups []ItemPlanGroup
 	var errs []ScheduleError
 
 	for _, cp := range input.ConsumptionPlans {
-		item, ok := itemByID[cp.ItemID]
-		if !ok {
-			errs = append(errs, ScheduleError{ItemID: cp.ItemID, Message: "item not found"})
-			continue
-		}
-
-		ratio := cp.Dosage / item.DosagePerUnit
-		capsPerDose := int(math.Round(ratio))
-		if capsPerDose < 1 || math.Abs(ratio-float64(capsPerDose)) > 1e-9 {
-			errs = append(errs, ScheduleError{
-				ItemID:  cp.ItemID,
-				Message: fmt.Sprintf("dosage %.4g / dosage_per_unit %.4g = %.4g is not a positive integer", cp.Dosage, item.DosagePerUnit, ratio),
-			})
-			continue
-		}
-
 		pc, err := ParseCron(cp.Frequency)
 		if err != nil {
-			errs = append(errs, ScheduleError{ItemID: cp.ItemID, Message: fmt.Sprintf("invalid frequency: %v", err)})
+			label := cp.ItemID
+			if label == "" {
+				label = cp.Substance
+			}
+			errs = append(errs, ScheduleError{ItemID: label, Message: fmt.Sprintf("invalid frequency: %v", err)})
 			continue
 		}
-
 		activeFrac := ActiveDayFraction(pc)
 		dosesPerDay := float64(cp.TimesPerDay) * activeFrac
-		consumptionRate := float64(capsPerDose) * dosesPerDay
 
-		currentCaps := 0
-		if effectiveStock != nil {
-			currentCaps = effectiveStock[item.ID]
+		if cp.Substance != "" {
+			// Substance mode: find all items matching the substance with valid integer division.
+			items := itemsBySubstance[cp.Substance]
+			var candidates []ItemPlan
+			for _, item := range items {
+				ratio := cp.Dosage / item.DosagePerUnit
+				capsPerDose := int(math.Round(ratio))
+				if capsPerDose < 1 || math.Abs(ratio-float64(capsPerDose)) > 1e-9 {
+					continue // this item can't divide the dosage evenly
+				}
+
+				consumptionRate := float64(capsPerDose) * dosesPerDay
+				currentCaps := 0
+				if effectiveStock != nil {
+					currentCaps = effectiveStock[item.ID]
+				}
+
+				candidates = append(candidates, ItemPlan{
+					Item:            item,
+					Plan:            cp,
+					CapsulesPerDose: capsPerDose,
+					Fraction:        1.0,
+					DosesPerDay:     dosesPerDay,
+					ConsumptionRate: consumptionRate,
+					CurrentCapsules: currentCaps,
+				})
+			}
+
+			if len(candidates) == 0 {
+				errs = append(errs, ScheduleError{
+					ItemID:  cp.Substance,
+					Message: "no item's dosage_per_unit divides dosage evenly",
+				})
+				continue
+			}
+
+			groups = append(groups, ItemPlanGroup{
+				Candidates: candidates,
+				Label:      cp.Substance,
+			})
+		} else {
+			// Item mode: resolve directly.
+			item, ok := itemByID[cp.ItemID]
+			if !ok {
+				errs = append(errs, ScheduleError{ItemID: cp.ItemID, Message: "item not found"})
+				continue
+			}
+
+			consumptionRate := float64(cp.CapsulesPerDose) * cp.Fraction * dosesPerDay
+			currentCaps := 0
+			if effectiveStock != nil {
+				currentCaps = effectiveStock[item.ID]
+			}
+
+			groups = append(groups, ItemPlanGroup{
+				Candidates: []ItemPlan{{
+					Item:            item,
+					Plan:            cp,
+					CapsulesPerDose: cp.CapsulesPerDose,
+					Fraction:        cp.Fraction,
+					DosesPerDay:     dosesPerDay,
+					ConsumptionRate: consumptionRate,
+					CurrentCapsules: currentCaps,
+				}},
+				Label: cp.ItemID,
+			})
 		}
-
-		plans = append(plans, ItemPlan{
-			Item:            item,
-			Plan:            cp,
-			CapsulesPerDose: capsPerDose,
-			DosesPerDay:     dosesPerDay,
-			ConsumptionRate: consumptionRate,
-			CurrentCapsules: currentCaps,
-		})
 	}
 
-	return plans, errs
+	return groups, errs
 }
 
 // computeProductMetrics calculates supply metrics for a product given an item's consumption rate.
@@ -72,7 +121,7 @@ func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, 
 	}
 	maxSupplyDays := float64(maxBoxes*product.CapsulesPerBox) / itemPlan.ConsumptionRate
 	costPerCapsule := ce.Price / float64(product.CapsulesPerBox)
-	costPerDose := costPerCapsule * float64(itemPlan.CapsulesPerDose)
+	costPerDose := costPerCapsule * float64(itemPlan.CapsulesPerDose) * itemPlan.Fraction
 
 	return ProductSupplierChoice{
 		Product:       product,
@@ -85,29 +134,14 @@ func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, 
 	}
 }
 
-// SelectProductAndSupplier picks the best product+supplier for an item using the given strategy.
-// Products are implicitly prioritized by their order in the products array.
-func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers []Supplier, strategy SelectionStrategy) *ProductSupplierChoice {
+// selectForCandidate finds the best product+supplier for a single ItemPlan candidate.
+func selectForCandidate(itemPlan ItemPlan, products []Product, offersByProduct map[string][]supplierOffer, strategy SelectionStrategy) *ProductSupplierChoice {
 	if itemPlan.ConsumptionRate <= 0 {
 		return nil
 	}
 
-	// Build a catalog index: product_id -> [(supplier, catalog_entry)]
-	type supplierOffer struct {
-		Supplier     Supplier
-		CatalogEntry CatalogEntry
-	}
-	offersByProduct := make(map[string][]supplierOffer)
-	for _, sup := range suppliers {
-		for _, ce := range sup.Catalog {
-			offersByProduct[ce.ProductID] = append(offersByProduct[ce.ProductID], supplierOffer{sup, ce})
-		}
-	}
-
 	switch strategy {
 	case StrategyPreferred:
-		// Walk products in array order (user's priority). Pick the first product
-		// that has any supplier, then choose the cheapest supplier for it.
 		for _, prod := range products {
 			if prod.ItemID != itemPlan.Item.ID {
 				continue
@@ -116,7 +150,6 @@ func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers [
 			if len(offers) == 0 {
 				continue
 			}
-			// Pick cheapest supplier for this product.
 			var best *ProductSupplierChoice
 			for _, o := range offers {
 				choice := computeProductMetrics(itemPlan, prod, o.CatalogEntry, o.Supplier)
@@ -126,10 +159,8 @@ func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers [
 			}
 			return best
 		}
-		return nil
 
 	case StrategyCheapest:
-		// Find the product+supplier combo with the lowest cost per dose.
 		var best *ProductSupplierChoice
 		for _, prod := range products {
 			if prod.ItemID != itemPlan.Item.ID {
@@ -145,7 +176,6 @@ func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers [
 		return best
 
 	case StrategyFastest:
-		// Find the product+supplier combo with shortest delivery, tie-break by cost.
 		var best *ProductSupplierChoice
 		for _, prod := range products {
 			if prod.ItemID != itemPlan.Item.ID {
@@ -166,27 +196,70 @@ func SelectProductAndSupplier(itemPlan ItemPlan, products []Product, suppliers [
 	return nil
 }
 
+type supplierOffer struct {
+	Supplier     Supplier
+	CatalogEntry CatalogEntry
+}
+
 type itemAssignment struct {
 	ItemPlan ItemPlan
 	Choice   ProductSupplierChoice
 }
 
 // BuildSchedule constructs a single schedule using the given selection strategy.
-func BuildSchedule(scheduleID int, description string, itemPlans []ItemPlan, products []Product, suppliers []Supplier, headroomDays int, today time.Time, strategy SelectionStrategy) Schedule {
-	// Phase 1: Select product+supplier for each item.
+func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, products []Product, suppliers []Supplier, headroomDays int, today time.Time, strategy SelectionStrategy) Schedule {
+	// Build catalog index once.
+	offersByProduct := make(map[string][]supplierOffer)
+	for _, sup := range suppliers {
+		for _, ce := range sup.Catalog {
+			offersByProduct[ce.ProductID] = append(offersByProduct[ce.ProductID], supplierOffer{sup, ce})
+		}
+	}
+
+	// Phase 1: For each group, try all candidates and pick the best.
 	var assignments []itemAssignment
 	var schedErrors []ScheduleError
 
-	for _, ip := range itemPlans {
-		choice := SelectProductAndSupplier(ip, products, suppliers, strategy)
-		if choice == nil {
-			schedErrors = append(schedErrors, ScheduleError{
-				ItemID:  ip.Item.ID,
-				Message: "no product+supplier available for this item",
-			})
-			continue
+	for _, group := range groups {
+		var bestAssignment *itemAssignment
+
+		for _, candidate := range group.Candidates {
+			choice := selectForCandidate(candidate, products, offersByProduct, strategy)
+			if choice == nil {
+				continue
+			}
+			a := itemAssignment{ItemPlan: candidate, Choice: *choice}
+
+			if bestAssignment == nil {
+				bestAssignment = &a
+			} else {
+				// Pick better candidate based on strategy.
+				switch strategy {
+				case StrategyPreferred:
+					// First candidate with any match wins (array order = priority).
+					// Already set, skip.
+				case StrategyCheapest:
+					if a.Choice.CostPerDose < bestAssignment.Choice.CostPerDose {
+						bestAssignment = &a
+					}
+				case StrategyFastest:
+					if a.Choice.CatalogEntry.DeliveryDays < bestAssignment.Choice.CatalogEntry.DeliveryDays ||
+						(a.Choice.CatalogEntry.DeliveryDays == bestAssignment.Choice.CatalogEntry.DeliveryDays &&
+							a.Choice.CostPerDose < bestAssignment.Choice.CostPerDose) {
+						bestAssignment = &a
+					}
+				}
+			}
 		}
-		assignments = append(assignments, itemAssignment{ItemPlan: ip, Choice: *choice})
+
+		if bestAssignment == nil {
+			schedErrors = append(schedErrors, ScheduleError{
+				ItemID:  group.Label,
+				Message: "no product+supplier available",
+			})
+		} else {
+			assignments = append(assignments, *bestAssignment)
+		}
 	}
 
 	// Phase 2: Group assignments by supplier.
@@ -205,12 +278,12 @@ func BuildSchedule(scheduleID int, description string, itemPlans []ItemPlan, pro
 	}
 
 	// Deterministic order by supplier ID.
-	var groups []*supplierGroup
+	var supGroups []*supplierGroup
 	for _, g := range groupMap {
-		groups = append(groups, g)
+		supGroups = append(supGroups, g)
 	}
-	sort.Slice(groups, func(i, j int) bool {
-		return groups[i].Supplier.ID < groups[j].Supplier.ID
+	sort.Slice(supGroups, func(i, j int) bool {
+		return supGroups[i].Supplier.ID < supGroups[j].Supplier.ID
 	})
 
 	var initialPurchases []PurchaseEvent
@@ -221,13 +294,15 @@ func BuildSchedule(scheduleID int, description string, itemPlans []ItemPlan, pro
 
 	// Compute horizon for recurring dates.
 	maxStockDays := 0
-	for _, ip := range itemPlans {
-		if ip.Item.MaxStockDays > maxStockDays {
-			maxStockDays = ip.Item.MaxStockDays
+	for _, group := range groups {
+		for _, c := range group.Candidates {
+			if c.Item.MaxStockDays > maxStockDays {
+				maxStockDays = c.Item.MaxStockDays
+			}
 		}
 	}
 
-	for _, g := range groups {
+	for _, g := range supGroups {
 		// Checkout interval = min(maxSupplyDays) across items at this supplier.
 		checkoutInterval := math.Inf(1)
 		for _, a := range g.Assignments {
@@ -388,7 +463,7 @@ func BuildSchedule(scheduleID int, description string, itemPlans []ItemPlan, pro
 }
 
 // BuildAllSchedules generates three schedules: preferred, cheapest, fastest.
-func BuildAllSchedules(input Input, itemPlans []ItemPlan, today time.Time) []Schedule {
+func BuildAllSchedules(input Input, groups []ItemPlanGroup, today time.Time) []Schedule {
 	strategies := []struct {
 		Strategy    SelectionStrategy
 		Description string
@@ -400,7 +475,7 @@ func BuildAllSchedules(input Input, itemPlans []ItemPlan, today time.Time) []Sch
 
 	var schedules []Schedule
 	for i, s := range strategies {
-		sched := BuildSchedule(i+1, s.Description, itemPlans, input.Products, input.Suppliers, input.HeadroomDays, today, s.Strategy)
+		sched := BuildSchedule(i+1, s.Description, groups, input.Products, input.Suppliers, input.HeadroomDays, today, s.Strategy)
 		schedules = append(schedules, sched)
 	}
 	return schedules

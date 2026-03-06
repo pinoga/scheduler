@@ -18,6 +18,7 @@ const (
 type Item struct {
 	ID            string  `json:"id"`
 	Name          string  `json:"name"`
+	Substance     string  `json:"substance,omitempty"` // optional grouping key for cross-item equivalence
 	DosagePerUnit float64 `json:"dosage_per_unit"`
 	Unit          Unit    `json:"unit"`
 	MaxStockDays  int     `json:"max_stock_days"`
@@ -42,11 +43,28 @@ type Supplier struct {
 	Catalog []CatalogEntry `json:"catalog"`
 }
 
+// ConsumptionPlan has two mutually exclusive modes:
+//
+// Substance mode: Substance + Dosage. Engine finds any item matching the substance
+// whose dosage_per_unit divides the dosage evenly.
+//
+// Item mode: ItemID + CapsulesPerDose + Fraction. References a specific item directly.
+// CapsulesPerDose defaults to 1, Fraction defaults to 1.0.
 type ConsumptionPlan struct {
-	ItemID      string  `json:"item_id"`
-	Dosage      float64 `json:"dosage"`
-	Frequency   string  `json:"frequency"`      // 3-field cron: "dom month dow"
-	TimesPerDay int     `json:"times_per_day"`   // defaults to 1 if omitted
+	// Mode selection (exactly one must be set)
+	Substance string `json:"substance,omitempty"` // substance mode
+	ItemID    string `json:"item_id,omitempty"`    // item mode
+
+	// Substance mode fields
+	Dosage float64 `json:"dosage,omitempty"` // required in substance mode
+
+	// Item mode fields
+	CapsulesPerDose int     `json:"capsules_per_dose,omitempty"` // default 1
+	Fraction        float64 `json:"fraction,omitempty"`          // default 1.0
+
+	// Common fields
+	Frequency   string `json:"frequency"`    // 3-field cron: "dom month dow"
+	TimesPerDay int    `json:"times_per_day"` // defaults to 1 if omitted
 }
 
 type StockEntry struct {
@@ -66,12 +84,12 @@ type Input struct {
 // ---------- Parsed cron (internal) ----------
 
 type ParsedCron struct {
-	DoM      []int
-	Months   []int
-	DoW      []int
-	DomWild  bool
+	DoM       []int
+	Months    []int
+	DoW       []int
+	DomWild   bool
 	MonthWild bool
-	DowWild  bool
+	DowWild   bool
 }
 
 // ---------- Computed intermediates (not serialized) ----------
@@ -80,9 +98,18 @@ type ItemPlan struct {
 	Item            Item
 	Plan            ConsumptionPlan
 	CapsulesPerDose int
+	Fraction        float64
 	DosesPerDay     float64
-	ConsumptionRate float64 // capsules per day
+	ConsumptionRate float64 // capsules per day (= capsules_per_dose * fraction * doses_per_day)
 	CurrentCapsules int
+}
+
+// ItemPlanGroup holds one or more candidate ItemPlans for a single consumption plan.
+// Substance mode may produce multiple candidates (one per matching item).
+// Item mode always produces exactly one candidate.
+type ItemPlanGroup struct {
+	Candidates []ItemPlan
+	Label      string // for error messages: substance name or item ID
 }
 
 // SelectionStrategy determines how products and suppliers are chosen.

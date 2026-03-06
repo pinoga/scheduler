@@ -35,10 +35,20 @@ func LoadInput(filePath string) (Input, error) {
 		return Input{}, fmt.Errorf("parsing input JSON: %w", err)
 	}
 
-	// Default times_per_day to 1 if omitted (zero value).
+	// Apply defaults.
 	for i := range input.ConsumptionPlans {
-		if input.ConsumptionPlans[i].TimesPerDay <= 0 {
-			input.ConsumptionPlans[i].TimesPerDay = 1
+		cp := &input.ConsumptionPlans[i]
+		if cp.TimesPerDay <= 0 {
+			cp.TimesPerDay = 1
+		}
+		// Item mode defaults.
+		if cp.ItemID != "" {
+			if cp.CapsulesPerDose <= 0 {
+				cp.CapsulesPerDose = 1
+			}
+			if cp.Fraction <= 0 {
+				cp.Fraction = 1.0
+			}
 		}
 	}
 
@@ -69,6 +79,14 @@ func ValidateInput(input Input) error {
 		productByID[prod.ID] = prod
 	}
 
+	// Build substance -> items index.
+	itemsBySubstance := make(map[string][]Item)
+	for _, item := range input.Items {
+		if item.Substance != "" {
+			itemsBySubstance[item.Substance] = append(itemsBySubstance[item.Substance], item)
+		}
+	}
+
 	// Validate items.
 	for _, item := range input.Items {
 		if item.ID == "" {
@@ -83,7 +101,18 @@ func ValidateInput(input Input) error {
 		switch item.Unit {
 		case UnitMg, UnitMcg, UnitG, UnitMl, UnitCapsules:
 		default:
-			ve.add(fmt.Sprintf("item %q: unknown unit %q (expected mg, mcg, g, or ml)", item.ID, item.Unit))
+			ve.add(fmt.Sprintf("item %q: unknown unit %q (expected mg, mcg, g, ml, or capsules)", item.ID, item.Unit))
+		}
+	}
+
+	// Validate that items sharing a substance have the same unit.
+	for substance, items := range itemsBySubstance {
+		unit := items[0].Unit
+		for _, item := range items[1:] {
+			if item.Unit != unit {
+				ve.add(fmt.Sprintf("substance %q: item %q has unit %q but item %q has unit %q",
+					substance, items[0].ID, unit, item.ID, item.Unit))
+			}
 		}
 	}
 
@@ -128,32 +157,65 @@ func ValidateInput(input Input) error {
 	}
 
 	// Validate consumption plans.
-	for _, cp := range input.ConsumptionPlans {
-		item, ok := itemByID[cp.ItemID]
-		if !ok {
-			ve.add(fmt.Sprintf("consumption_plan: references unknown item %q", cp.ItemID))
-			continue
-		}
-		if cp.Dosage <= 0 {
-			ve.add(fmt.Sprintf("consumption_plan for %q: dosage must be > 0", cp.ItemID))
-			continue
-		}
+	for i, cp := range input.ConsumptionPlans {
+		label := fmt.Sprintf("consumption_plan[%d]", i)
 
-		// Check capsules_per_dose is an integer.
-		ratio := cp.Dosage / item.DosagePerUnit
-		rounded := math.Round(ratio)
-		if math.Abs(ratio-rounded) > 1e-9 || rounded < 1 {
-			ve.add(fmt.Sprintf("consumption_plan for %q: dosage %.4g / dosage_per_unit %.4g = %.4g (must be a positive integer)",
-				cp.ItemID, cp.Dosage, item.DosagePerUnit, ratio))
+		// Mode validation: exactly one of substance or item_id must be set.
+		if cp.Substance != "" && cp.ItemID != "" {
+			ve.add(fmt.Sprintf("%s: cannot set both substance %q and item_id %q", label, cp.Substance, cp.ItemID))
+			continue
+		}
+		if cp.Substance == "" && cp.ItemID == "" {
+			ve.add(fmt.Sprintf("%s: must set either substance or item_id", label))
+			continue
 		}
 
 		if cp.TimesPerDay <= 0 {
-			ve.add(fmt.Sprintf("consumption_plan for %q: times_per_day must be > 0", cp.ItemID))
+			ve.add(fmt.Sprintf("%s: times_per_day must be > 0", label))
 		}
 
-		// Validate cron expression.
 		if _, err := ParseCron(cp.Frequency); err != nil {
-			ve.add(fmt.Sprintf("consumption_plan for %q: invalid frequency %q: %v", cp.ItemID, cp.Frequency, err))
+			ve.add(fmt.Sprintf("%s: invalid frequency %q: %v", label, cp.Frequency, err))
+		}
+
+		if cp.Substance != "" {
+			// Substance mode validation.
+			label = fmt.Sprintf("consumption_plan for substance %q", cp.Substance)
+			if cp.Dosage <= 0 {
+				ve.add(fmt.Sprintf("%s: dosage must be > 0", label))
+				continue
+			}
+			items := itemsBySubstance[cp.Substance]
+			if len(items) == 0 {
+				ve.add(fmt.Sprintf("%s: no items have this substance", label))
+				continue
+			}
+			// Check that at least one item can divide the dosage evenly.
+			anyValid := false
+			for _, item := range items {
+				ratio := cp.Dosage / item.DosagePerUnit
+				rounded := math.Round(ratio)
+				if math.Abs(ratio-rounded) <= 1e-9 && rounded >= 1 {
+					anyValid = true
+					break
+				}
+			}
+			if !anyValid {
+				ve.add(fmt.Sprintf("%s: no item's dosage_per_unit divides dosage %.4g evenly", label, cp.Dosage))
+			}
+		} else {
+			// Item mode validation.
+			label = fmt.Sprintf("consumption_plan for item %q", cp.ItemID)
+			if _, ok := itemByID[cp.ItemID]; !ok {
+				ve.add(fmt.Sprintf("%s: references unknown item", label))
+				continue
+			}
+			if cp.CapsulesPerDose < 1 {
+				ve.add(fmt.Sprintf("%s: capsules_per_dose must be >= 1", label))
+			}
+			if cp.Fraction <= 0 || cp.Fraction > 1 {
+				ve.add(fmt.Sprintf("%s: fraction must be > 0 and <= 1", label))
+			}
 		}
 	}
 

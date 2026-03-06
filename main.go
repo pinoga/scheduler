@@ -47,17 +47,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Warning: could not load state: %v\n", err)
 	}
 
-	// First pass: build item plans with zero stock to get consumption rates.
-	itemPlansForRates, _ := BuildItemPlans(input, nil)
+	// First pass: build groups with zero stock to get consumption rates for stock decay.
+	groupsForRates, _ := BuildItemPlanGroups(input, nil)
+	plansForRates := flattenGroups(groupsForRates)
 
 	// Compute effective stock (auto-decrement from state or use input).
-	effectiveStock := ComputeEffectiveStock(state, itemPlansForRates, input.CurrentStock, today)
+	effectiveStock := ComputeEffectiveStock(state, plansForRates, input.CurrentStock, today)
 
-	// Second pass: build item plans with actual stock.
-	itemPlans, planErrors := BuildItemPlans(input, effectiveStock)
+	// Second pass: build groups with actual stock.
+	groups, planErrors := BuildItemPlanGroups(input, effectiveStock)
 
 	// Build all schedule alternatives.
-	schedules := BuildAllSchedules(input, itemPlans, today)
+	schedules := BuildAllSchedules(input, groups, today)
 
 	// Attach plan-level errors to each schedule.
 	for i := range schedules {
@@ -102,4 +103,13 @@ func main() {
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not save state: %v\n", err)
 	}
+}
+
+// flattenGroups extracts all candidate ItemPlans for stock decay computation.
+func flattenGroups(groups []ItemPlanGroup) []ItemPlan {
+	var plans []ItemPlan
+	for _, g := range groups {
+		plans = append(plans, g.Candidates...)
+	}
+	return plans
 }

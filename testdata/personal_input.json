@@ -17,6 +17,7 @@
     {
       "id": "alpha-lipoic-acid-250mg",
       "name": "Alpha-Lipoic Acid 250mg",
+      "substance": "alpha-lipoic-acid",
       "dosage_per_unit": 250,
       "unit": "mg",
       "max_stock_days": 60
@@ -24,6 +25,7 @@
     {
       "id": "alpha-lipoic-acid-500mg",
       "name": "Alpha-Lipoic Acid 500mg",
+      "substance": "alpha-lipoic-acid",
       "dosage_per_unit": 500,
       "unit": "mg",
       "max_stock_days": 60
@@ -203,6 +205,7 @@
       "catalog": [
         { "product_id": "lions-mane-500mg-180", "price": 26.99, "currency": "USD", "delivery_days": 10 },
         { "product_id": "alpha-lipoic-acid-250mg-60", "price": 13.49, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "alpha-lipoic-acid-500mg-120", "price": 18.99, "currency": "USD", "delivery_days": 10 },
         { "product_id": "solgar-collagen-ha-120mg-30", "price": 22.99, "currency": "USD", "delivery_days": 10 },
         { "product_id": "citicoline-250mg-180-cognizin", "price": 21.99, "currency": "USD", "delivery_days": 10 },
         { "product_id": "vitamin-d3-2000iu-k2-45mcg-120-now", "price": 14.99, "currency": "USD", "delivery_days": 10 },
@@ -217,6 +220,7 @@
       "catalog": [
         { "product_id": "lions-mane-500mg-180", "price": 28.99, "currency": "USD", "delivery_days": 3 },
         { "product_id": "alpha-lipoic-acid-250mg-60", "price": 14.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "alpha-lipoic-acid-500mg-120", "price": 22.99, "currency": "USD", "delivery_days": 3 },
         { "product_id": "solgar-collagen-ha-120mg-30", "price": 24.99, "currency": "USD", "delivery_days": 3 },
         { "product_id": "citicoline-250mg-180-cognizin", "price": 23.99, "currency": "USD", "delivery_days": 3 },
         { "product_id": "vitamin-d3-2000iu-k2-45mcg-120-now", "price": 16.99, "currency": "USD", "delivery_days": 3 },
@@ -239,85 +243,76 @@
   "consumption_plans": [
     {
       "item_id": "vortioxetine-20mg",
-      "dosage": 20,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "lions-mane-500mg",
-      "dosage": 1000,
+      "capsules_per_dose": 2,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
-      "item_id": "alpha-lipoic-acid-250mg",
+      "substance": "alpha-lipoic-acid",
       "dosage": 250,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "solgar-collagen-ha-120mg",
-      "dosage": 1,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "huperzine-a-200mcg",
-      "dosage": 200,
       "frequency": "1,4,7,10,13,16,19,22,25,28 * *",
       "times_per_day": 1
     },
     {
       "item_id": "citicoline-250mg",
-      "dosage": 500,
+      "capsules_per_dose": 2,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "vitamin-d3-2000iu-k2-45mcg",
-      "dosage": 1,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "nmn-250mg",
-      "dosage": 250,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "cycloastragenol-10pct-100mg",
-      "dosage": 100,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "glycine-1000mg",
-      "dosage": 3000,
+      "capsules_per_dose": 3,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "magnesium-l-threonate-144mg",
-      "dosage": 144,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "bacopa-monnieri-24pct-300mg",
-      "dosage": 300,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "mirtazapine-15mg",
-      "dosage": 15,
+      "fraction": 0.25,
       "frequency": "* * *",
       "times_per_day": 1
     },
     {
       "item_id": "creatine-3g",
-      "dosage": 3,
       "frequency": "* * *",
       "times_per_day": 1
     }
