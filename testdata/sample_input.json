@@ -84,10 +84,10 @@
     }
   ],
   "consumption_plans": [
-    { "item_id": "ashwagandha", "capsules_per_dose": 2, "frequency": "* * *" },
+    { "item_id": "ashwagandha", "units": 2, "frequency": "* * *" },
     { "item_id": "vitamin-d", "frequency": "* * *" },
-    { "item_id": "omega-3", "capsules_per_dose": 2, "frequency": "* * *" },
-    { "item_id": "magnesium", "capsules_per_dose": 2, "frequency": "* * *" }
+    { "item_id": "omega-3", "units": 2, "frequency": "* * *" },
+    { "item_id": "magnesium", "units": 2, "frequency": "* * *" }
   ],
   "current_stock": [
     { "item_id": "ashwagandha", "capsules": 45 },

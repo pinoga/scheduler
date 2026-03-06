@@ -48,19 +48,19 @@ type Supplier struct {
 // Substance mode: Substance + Dosage. Engine finds any item matching the substance
 // whose dosage_per_unit divides the dosage evenly.
 //
-// Item mode: ItemID + CapsulesPerDose + Fraction. References a specific item directly.
-// CapsulesPerDose defaults to 1, Fraction defaults to 1.0.
+// Item mode: ItemID + UnitsPerDose + Fraction. References a specific item directly.
+// UnitsPerDose defaults to 1, Fraction defaults to 1.0.
 type ConsumptionPlan struct {
 	// Mode selection (exactly one must be set)
 	Substance string `json:"substance,omitempty"` // substance mode
-	ItemID    string `json:"item_id,omitempty"`    // item mode
+	ItemID    string `json:"item_id,omitempty"`   // item mode
 
 	// Substance mode fields
 	Dosage float64 `json:"dosage,omitempty"` // required in substance mode
 
 	// Item mode fields
-	CapsulesPerDose int     `json:"capsules_per_dose,omitempty"` // default 1
-	Fraction        float64 `json:"fraction,omitempty"`          // default 1.0
+	UnitsPerDose int     `json:"units,omitempty"` // default 1
+	Fraction     float64 `json:"fraction,omitempty"`
 
 	// Common fields
 	Frequency string `json:"frequency"` // 3-field cron: "dom month dow"
@@ -96,9 +96,9 @@ type ParsedCron struct {
 type ItemPlan struct {
 	Item            Item
 	Plan            ConsumptionPlan
-	CapsulesPerDose int
+	UnitsPerDose    int
 	Fraction        float64
-	ConsumptionRate float64 // capsules per active day (= capsules_per_dose * fraction * active_day_fraction)
+	ConsumptionRate float64 // units per day (= units_per_dose * fraction * active_day_fraction)
 	CurrentCapsules int
 }
 
@@ -161,12 +161,12 @@ type ScheduleError struct {
 }
 
 type Schedule struct {
-	ID                 int              `json:"id"`
-	Description        string           `json:"description"`
-	InitialPurchases   []PurchaseEvent  `json:"initial_purchases"`
-	RecurringCheckouts []PurchaseEvent  `json:"recurring_checkouts"`
-	Summary            ScheduleSummary  `json:"summary"`
-	Errors             []ScheduleError  `json:"errors,omitempty"`
+	ID                 int             `json:"id"`
+	Description        string          `json:"description"`
+	InitialPurchases   []PurchaseEvent `json:"initial_purchases"`
+	RecurringCheckouts []PurchaseEvent `json:"recurring_checkouts"`
+	Summary            ScheduleSummary `json:"summary"`
+	Errors             []ScheduleError `json:"errors,omitempty"`
 }
 
 type Output struct {
