@@ -81,7 +81,7 @@ func ValidateInput(input Input) error {
 			ve.add(fmt.Sprintf("item %q: max_stock_days must be > 0", item.ID))
 		}
 		switch item.Unit {
-		case UnitMg, UnitMcg, UnitG, UnitMl:
+		case UnitMg, UnitMcg, UnitG, UnitMl, UnitCapsules:
 		default:
 			ve.add(fmt.Sprintf("item %q: unknown unit %q (expected mg, mcg, g, or ml)", item.ID, item.Unit))
 		}

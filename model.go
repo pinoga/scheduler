@@ -6,10 +6,11 @@ import "time"
 type Unit string
 
 const (
-	UnitMg  Unit = "mg"
-	UnitMcg Unit = "mcg"
-	UnitG   Unit = "g"
-	UnitMl  Unit = "ml"
+	UnitMg       Unit = "mg"
+	UnitMcg      Unit = "mcg"
+	UnitG        Unit = "g"
+	UnitMl       Unit = "ml"
+	UnitCapsules Unit = "capsules"
 )
 
 // ---------- Input domain types ----------

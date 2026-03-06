@@ -1,0 +1,327 @@
+{
+  "items": [
+    {
+      "id": "vortioxetine-20mg",
+      "name": "Vortioxetine 20mg",
+      "dosage_per_unit": 20,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "lions-mane-500mg",
+      "name": "Lion's Mane Mushroom Extract 500mg",
+      "dosage_per_unit": 500,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "alpha-lipoic-acid-250mg",
+      "name": "Alpha-Lipoic Acid 250mg",
+      "dosage_per_unit": 250,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "alpha-lipoic-acid-500mg",
+      "name": "Alpha-Lipoic Acid 500mg",
+      "dosage_per_unit": 500,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "solgar-collagen-ha-120mg",
+      "name": "Solgar Collagen Hyaluronic Acid Complex 120mg",
+      "dosage_per_unit": 1,
+      "unit": "capsules",
+      "max_stock_days": 60
+    },
+    {
+      "id": "huperzine-a-200mcg",
+      "name": "Huperzine A 200mcg",
+      "dosage_per_unit": 200,
+      "unit": "mcg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "citicoline-25mg",
+      "name": "Citicoline 250mg",
+      "dosage_per_unit": 250,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "vitamin-d3-2000iu-k2-45mcg",
+      "name": "Vitamin D3 2000IU + K2 45mcg",
+      "dosage_per_unit": 1,
+      "unit": "capsules",
+      "max_stock_days": 60
+    },
+    {
+      "id": "nmn-250mg",
+      "name": "NMN 250mg",
+      "dosage_per_unit": 250,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "cycloastragenol-10pct-100mg",
+      "name": "Cycloastragenol 10% 100mg",
+      "dosage_per_unit": 100,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "glycine-1000mg",
+      "name": "Glycine 1000mg",
+      "dosage_per_unit": 1000,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "magnesium-l-threonate-144mg",
+      "name": "Magnesium L-Threonate 144mg",
+      "dosage_per_unit": 144,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "bacopa-monnieri-24pct-300mg",
+      "name": "Bacopa Monnieri 24% Bacosides 300mg",
+      "dosage_per_unit": 300,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "mirtazapine-15mg",
+      "name": "Mirtazapine 15mg",
+      "dosage_per_unit": 15,
+      "unit": "mg",
+      "max_stock_days": 60
+    },
+    {
+      "id": "creatine-3g",
+      "name": "Creatine Monohydrate 3g",
+      "dosage_per_unit": 3,
+      "unit": "g",
+      "max_stock_days": 60
+    }
+  ],
+  "products": [
+    {
+      "id": "brintellix-20mg-28",
+      "item_id": "vortioxetine-20mg",
+      "capsules_per_box": 28
+    },
+    {
+      "id": "lions-mane-500mg-60",
+      "item_id": "lions-mane-500mg",
+      "capsules_per_box": 180
+    },
+    {
+      "id": "alpha-lipoic-acid-250mg-60",
+      "item_id": "alpha-lipoic-acid-250mg",
+      "capsules_per_box": 60
+    },
+    {
+      "id": "alpha-lipoic-acid-500mg-120",
+      "item_id": "alpha-lipoic-acid-500mg",
+      "capsules_per_box": 120
+    },
+    {
+      "id": "solgar-collagen-ha-120mg-30",
+      "item_id": "solgar-collagen-ha-120mg",
+      "capsules_per_box": 30
+    },
+    {
+      "id": "huperzine-a-200mcg-120",
+      "item_id": "huperzine-a-200mcg",
+      "capsules_per_box": 120
+    },
+    {
+      "id": "citicoline-25mg-180-cognizin",
+      "item_id": "citicoline",
+      "capsules_per_box": 180
+    },
+    {
+      "id": "vitamin-d3-2000iu-k2-45mcg-120-now",
+      "item_id": "vitamin-d3-2000iu-k2-45mcg",
+      "capsules_per_box": 120
+    },
+    {
+      "id": "nmn-60cap",
+      "item_id": "nmn",
+      "capsules_per_box": 60
+    },
+    {
+      "id": "cycloastragenol-60cap",
+      "item_id": "cycloastragenol-10pct",
+      "capsules_per_box": 60
+    },
+    {
+      "id": "glycine-180cap",
+      "item_id": "glycine",
+      "capsules_per_box": 180
+    },
+    {
+      "id": "mag-l-threonate-90cap",
+      "item_id": "magnesium-l-threonate",
+      "capsules_per_box": 90
+    },
+    {
+      "id": "bacopa-60cap",
+      "item_id": "bacopa-monnieri-24pct",
+      "capsules_per_box": 60
+    },
+    {
+      "id": "mirtazapine-15mg-30tab",
+      "item_id": "mirtazapine-3.75mg",
+      "capsules_per_box": 30
+    },
+    {
+      "id": "creatine-100serv",
+      "item_id": "creatine",
+      "capsules_per_box": 100
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "nootropicsdepot",
+      "name": "Nootropics Depot",
+      "catalog": [
+        { "product_id": "lions-mane-60cap", "price": 24.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "ala-60cap", "price": 11.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "huperzine-a-120cap", "price": 14.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "citicoline-60cap", "price": 19.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "nmn-60cap", "price": 44.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "cycloastragenol-60cap", "price": 39.99, "currency": "USD", "delivery_days": 7 },
+        { "product_id": "bacopa-60cap", "price": 17.99, "currency": "USD", "delivery_days": 7 }
+      ]
+    },
+    {
+      "id": "iherb",
+      "name": "iHerb",
+      "catalog": [
+        { "product_id": "lions-mane-60cap", "price": 26.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "ala-60cap", "price": 13.49, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "solgar-collagen-ha-30tab", "price": 22.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "citicoline-60cap", "price": 21.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "vitd3-k2-120cap", "price": 14.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "glycine-180cap", "price": 9.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "mag-l-threonate-90cap", "price": 29.99, "currency": "USD", "delivery_days": 10 },
+        { "product_id": "creatine-100serv", "price": 12.99, "currency": "USD", "delivery_days": 10 }
+      ]
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "catalog": [
+        { "product_id": "lions-mane-60cap", "price": 28.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "ala-60cap", "price": 14.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "solgar-collagen-ha-30tab", "price": 24.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "citicoline-60cap", "price": 23.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "vitd3-k2-120cap", "price": 16.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "nmn-60cap", "price": 49.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "glycine-180cap", "price": 11.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "mag-l-threonate-90cap", "price": 32.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "bacopa-60cap", "price": 19.99, "currency": "USD", "delivery_days": 3 },
+        { "product_id": "creatine-100serv", "price": 14.99, "currency": "USD", "delivery_days": 3 }
+      ]
+    },
+    {
+      "id": "pharmacy",
+      "name": "Pharmacy",
+      "catalog": [
+        { "product_id": "brintellix-20mg-28tab", "price": 45.00, "currency": "USD", "delivery_days": 1 },
+        { "product_id": "mirtazapine-15mg-30tab", "price": 8.00, "currency": "USD", "delivery_days": 1 }
+      ]
+    }
+  ],
+  "consumption_plans": [
+    {
+      "item_id": "brintellix-20mg",
+      "dosage": 20,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "lions-mane",
+      "dosage": 1000,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "alpha-lipoic-acid",
+      "dosage": 250,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "solgar-collagen-ha-120mg",
+      "dosage": 1,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "huperzine-a",
+      "dosage": 200,
+      "frequency": "1,4,7,10,13,16,19,22,25,28 * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "citicoline",
+      "dosage": 500,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "vitamin-d3-2000iu-k2-45mcg",
+      "dosage": 1,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "nmn",
+      "dosage": 250,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "cycloastragenol-10pct",
+      "dosage": 100,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "glycine",
+      "dosage": 3000,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "magnesium-l-threonate",
+      "dosage": 144,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "bacopa-monnieri-24pct",
+      "dosage": 300,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "mirtazapine-3.75mg",
+      "dosage": 3.75,
+      "frequency": "* * *",
+      "times_per_day": 1
+    },
+    {
+      "item_id": "creatine",
+      "dosage": 3,
+      "frequency": "* * *",
+      "times_per_day": 1
+    }
+  ],
+  "current_stock": [],
+  "headroom_days": 7
+}
