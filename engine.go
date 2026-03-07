@@ -45,23 +45,23 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 			var candidates []ItemPlan
 			for _, item := range items {
 				ratio := cp.Dosage / item.DosagePerUnit
-				capsPerDose := int(math.Round(ratio))
-				if capsPerDose < 1 || math.Abs(ratio-float64(capsPerDose)) > 1e-9 {
+				unitsPerDose := int(math.Round(ratio))
+				if unitsPerDose < 1 || math.Abs(ratio-float64(unitsPerDose)) > 1e-9 {
 					continue // this item can't divide the dosage evenly
 				}
 
-				consumptionRate := float64(capsPerDose) * activeFrac
-				currentCaps := 0
+				consumptionRate := float64(unitsPerDose) * activeFrac
+				currentStock := 0
 				if effectiveStock != nil {
-					currentCaps = effectiveStock[item.ID]
+					currentStock = effectiveStock[item.ID]
 				}
 
 				candidates = append(candidates, ItemPlan{
 					Item:            item,
 					Plan:            cp,
-					Units:           float64(capsPerDose),
+					Units:           float64(unitsPerDose),
 					ConsumptionRate: consumptionRate,
-					CurrentCapsules: currentCaps,
+					CurrentStock:    currentStock,
 				})
 			}
 
@@ -86,9 +86,9 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 			}
 
 			consumptionRate := cp.Units * activeFrac
-			currentCaps := 0
+			currentStock := 0
 			if effectiveStock != nil {
-				currentCaps = effectiveStock[item.ID]
+				currentStock = effectiveStock[item.ID]
 			}
 
 			groups = append(groups, ItemPlanGroup{
@@ -97,7 +97,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 					Plan:            cp,
 					Units:           cp.Units,
 					ConsumptionRate: consumptionRate,
-					CurrentCapsules: currentCaps,
+					CurrentStock:    currentStock,
 				}},
 				Label: cp.ItemID,
 			})
@@ -109,14 +109,14 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 
 // computeProductMetrics calculates supply metrics for a product given an item's consumption rate.
 func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, supplier Supplier) ProductSupplierChoice {
-	daysPerBox := float64(product.CapsulesPerBox) / itemPlan.ConsumptionRate
-	maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.ConsumptionRate / float64(product.CapsulesPerBox)))
+	daysPerBox := float64(product.UnitsPerBox) / itemPlan.ConsumptionRate
+	maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.ConsumptionRate / float64(product.UnitsPerBox)))
 	if maxBoxes < 1 {
 		maxBoxes = 1
 	}
-	maxSupplyDays := float64(maxBoxes*product.CapsulesPerBox) / itemPlan.ConsumptionRate
-	costPerCapsule := ce.Price / float64(product.CapsulesPerBox)
-	costPerDose := costPerCapsule * itemPlan.Units
+	maxSupplyDays := float64(maxBoxes*product.UnitsPerBox) / itemPlan.ConsumptionRate
+	costPerUnit := ce.Price / float64(product.UnitsPerBox)
+	costPerDose := costPerUnit * itemPlan.Units
 
 	return ProductSupplierChoice{
 		Product:       product,
@@ -317,8 +317,8 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 		}
 		var orders []itemOrder
 		for _, a := range g.Assignments {
-			capsNeeded := a.ItemPlan.ConsumptionRate * float64(intervalDays)
-			boxes := int(math.Ceil(capsNeeded / float64(a.Choice.Product.CapsulesPerBox)))
+			unitsNeeded := a.ItemPlan.ConsumptionRate * float64(intervalDays)
+			boxes := int(math.Ceil(unitsNeeded / float64(a.Choice.Product.UnitsPerBox)))
 			if boxes > a.Choice.MaxBoxes {
 				boxes = a.Choice.MaxBoxes
 			}
@@ -334,7 +334,7 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 			deliveryDays := o.Assignment.Choice.CatalogEntry.DeliveryDays
 			daysOfStock := 0.0
 			if o.Assignment.ItemPlan.ConsumptionRate > 0 {
-				daysOfStock = float64(o.Assignment.ItemPlan.CurrentCapsules) / o.Assignment.ItemPlan.ConsumptionRate
+				daysOfStock = float64(o.Assignment.ItemPlan.CurrentStock) / o.Assignment.ItemPlan.ConsumptionRate
 			}
 			daysUntilReorder := daysOfStock - float64(headroomDays) - float64(deliveryDays)
 			if daysUntilReorder < earliestReorder {
@@ -358,15 +358,15 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 		var initialProducts []ProductOrder
 		for _, o := range orders {
 			daysUntilPurchase := math.Floor(earliestReorder)
-			capsConsumedWaiting := o.Assignment.ItemPlan.ConsumptionRate * daysUntilPurchase
-			remainingAtPurchase := float64(o.Assignment.ItemPlan.CurrentCapsules) - capsConsumedWaiting
+			unitsConsumedWaiting := o.Assignment.ItemPlan.ConsumptionRate * daysUntilPurchase
+			remainingAtPurchase := float64(o.Assignment.ItemPlan.CurrentStock) - unitsConsumedWaiting
 			if remainingAtPurchase < 0 {
 				remainingAtPurchase = 0
 			}
 
 			totalCoverageDays := float64(intervalDays) + float64(o.Assignment.Choice.CatalogEntry.DeliveryDays)
-			capsNeeded := o.Assignment.ItemPlan.ConsumptionRate*totalCoverageDays - remainingAtPurchase
-			initialBoxes := int(math.Ceil(capsNeeded / float64(o.Assignment.Choice.Product.CapsulesPerBox)))
+			unitsNeeded := o.Assignment.ItemPlan.ConsumptionRate*totalCoverageDays - remainingAtPurchase
+			initialBoxes := int(math.Ceil(unitsNeeded / float64(o.Assignment.Choice.Product.UnitsPerBox)))
 			if initialBoxes < 1 {
 				initialBoxes = 1
 			}

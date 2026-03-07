@@ -112,77 +112,77 @@
     {
       "id": "brintellix-20mg-28",
       "item_id": "vortioxetine-20mg",
-      "capsules_per_box": 28
+      "units_per_box": 28
     },
     {
       "id": "lions-mane-500mg-180",
       "item_id": "lions-mane-500mg",
-      "capsules_per_box": 180
+      "units_per_box": 180
     },
     {
       "id": "alpha-lipoic-acid-250mg-60",
       "item_id": "alpha-lipoic-acid-250mg",
-      "capsules_per_box": 60
+      "units_per_box": 60
     },
     {
       "id": "alpha-lipoic-acid-500mg-120",
       "item_id": "alpha-lipoic-acid-500mg",
-      "capsules_per_box": 120
+      "units_per_box": 120
     },
     {
       "id": "solgar-collagen-ha-120mg-30",
       "item_id": "solgar-collagen-ha-120mg",
-      "capsules_per_box": 30
+      "units_per_box": 30
     },
     {
       "id": "huperzine-a-200mcg-120",
       "item_id": "huperzine-a-200mcg",
-      "capsules_per_box": 120
+      "units_per_box": 120
     },
     {
       "id": "citicoline-250mg-180-cognizin",
       "item_id": "citicoline-250mg",
-      "capsules_per_box": 180
+      "units_per_box": 180
     },
     {
       "id": "vitamin-d3-2000iu-k2-45mcg-120-now",
       "item_id": "vitamin-d3-2000iu-k2-45mcg",
-      "capsules_per_box": 120
+      "units_per_box": 120
     },
     {
       "id": "nmn-250mg-60",
       "item_id": "nmn-250mg",
-      "capsules_per_box": 60
+      "units_per_box": 60
     },
     {
       "id": "cycloastragenol-10pct-100mg-60",
       "item_id": "cycloastragenol-10pct-100mg",
-      "capsules_per_box": 60
+      "units_per_box": 60
     },
     {
       "id": "glycine-1000mg-180",
       "item_id": "glycine-1000mg",
-      "capsules_per_box": 180
+      "units_per_box": 180
     },
     {
       "id": "mag-l-threonate-144mg-90",
       "item_id": "magnesium-l-threonate-144mg",
-      "capsules_per_box": 90
+      "units_per_box": 90
     },
     {
       "id": "bacopa-24pct-300mg-60",
       "item_id": "bacopa-monnieri-24pct-300mg",
-      "capsules_per_box": 60
+      "units_per_box": 60
     },
     {
       "id": "mirtazapine-15mg-30",
       "item_id": "mirtazapine-15mg",
-      "capsules_per_box": 30
+      "units_per_box": 30
     },
     {
       "id": "creatine-3g-100",
       "item_id": "creatine-3g",
-      "capsules_per_box": 100
+      "units_per_box": 100
     }
   ],
   "suppliers": [

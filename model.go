@@ -25,9 +25,9 @@ type Item struct {
 }
 
 type Product struct {
-	ID             string `json:"id"`
-	ItemID         string `json:"item_id"`
-	CapsulesPerBox int    `json:"capsules_per_box"`
+	ID          string `json:"id"`
+	ItemID      string `json:"item_id"`
+	UnitsPerBox int    `json:"units_per_box"`
 }
 
 type CatalogEntry struct {
@@ -66,8 +66,8 @@ type ConsumptionPlan struct {
 }
 
 type StockEntry struct {
-	ItemID   string `json:"item_id"`
-	Capsules int    `json:"capsules"`
+	ItemID string `json:"item_id"`
+	Units  int    `json:"units"`
 }
 
 type Input struct {
@@ -97,7 +97,7 @@ type ItemPlan struct {
 	Plan            ConsumptionPlan
 	Units           float64 // units consumed per active day
 	ConsumptionRate float64 // units per day (= units * active_day_fraction)
-	CurrentCapsules int
+	CurrentStock    int
 }
 
 // ItemPlanGroup holds one or more candidate ItemPlans for a single consumption plan.

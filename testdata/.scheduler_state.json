@@ -3,19 +3,19 @@
   "stock_at_last_run": [
     {
       "item_id": "ashwagandha",
-      "capsules": 45
+      "units": 45
     },
     {
       "item_id": "vitamin-d",
-      "capsules": 90
+      "units": 90
     },
     {
       "item_id": "omega-3",
-      "capsules": 30
+      "units": 30
     },
     {
       "item_id": "magnesium",
-      "capsules": 60
+      "units": 60
     }
   ],
   "input_hash": "cbca57029501161f89e026073e815e32411df96b0a6bb9c03b1d8ad042dcbbc0"

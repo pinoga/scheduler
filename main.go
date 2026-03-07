@@ -92,7 +92,7 @@ func main() {
 	// Save state.
 	stockEntries := make([]StockEntry, 0, len(effectiveStock))
 	for itemID, caps := range effectiveStock {
-		stockEntries = append(stockEntries, StockEntry{ItemID: itemID, Capsules: caps})
+		stockEntries = append(stockEntries, StockEntry{ItemID: itemID, Units: caps})
 	}
 	inputHash, _ := ComputeInputHash(*inputPath)
 

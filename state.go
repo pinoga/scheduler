@@ -65,7 +65,7 @@ func ComputeEffectiveStock(state *State, itemPlans []ItemPlan, inputStock []Stoc
 	// Case 1: user provided current_stock.
 	if len(inputStock) > 0 {
 		for _, se := range inputStock {
-			stock[se.ItemID] = se.Capsules
+			stock[se.ItemID] = se.Units
 		}
 		return stock
 	}
@@ -90,7 +90,7 @@ func ComputeEffectiveStock(state *State, itemPlans []ItemPlan, inputStock []Stoc
 	for _, se := range state.StockAtLastRun {
 		rate := rateByItem[se.ItemID]
 		consumed := int(math.Ceil(rate * float64(elapsedDays)))
-		remaining := se.Capsules - consumed
+		remaining := se.Units - consumed
 		if remaining < 0 {
 			remaining = 0
 		}

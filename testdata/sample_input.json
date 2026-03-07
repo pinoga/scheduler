@@ -33,32 +33,32 @@
     {
       "id": "ash-60",
       "item_id": "ashwagandha",
-      "capsules_per_box": 60
+      "units_per_box": 60
     },
     {
       "id": "ash-120",
       "item_id": "ashwagandha",
-      "capsules_per_box": 120
+      "units_per_box": 120
     },
     {
       "id": "vitd-120",
       "item_id": "vitamin-d",
-      "capsules_per_box": 120
+      "units_per_box": 120
     },
     {
       "id": "omega-90",
       "item_id": "omega-3",
-      "capsules_per_box": 90
+      "units_per_box": 90
     },
     {
       "id": "omega-180",
       "item_id": "omega-3",
-      "capsules_per_box": 180
+      "units_per_box": 180
     },
     {
       "id": "mag-120",
       "item_id": "magnesium",
-      "capsules_per_box": 120
+      "units_per_box": 120
     }
   ],
   "suppliers": [
@@ -90,10 +90,10 @@
     { "item_id": "magnesium", "units": 2, "frequency": "* * *" }
   ],
   "current_stock": [
-    { "item_id": "ashwagandha", "capsules": 45 },
-    { "item_id": "vitamin-d", "capsules": 90 },
-    { "item_id": "omega-3", "capsules": 30 },
-    { "item_id": "magnesium", "capsules": 60 }
+    { "item_id": "ashwagandha", "units": 45 },
+    { "item_id": "vitamin-d", "units": 90 },
+    { "item_id": "omega-3", "units": 30 },
+    { "item_id": "magnesium", "units": 60 }
   ],
   "headroom_days": 7
 }

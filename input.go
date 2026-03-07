@@ -116,8 +116,8 @@ func ValidateInput(input Input) error {
 		if _, ok := itemByID[prod.ItemID]; !ok {
 			ve.add(fmt.Sprintf("product %q: references unknown item %q", prod.ID, prod.ItemID))
 		}
-		if prod.CapsulesPerBox <= 0 {
-			ve.add(fmt.Sprintf("product %q: capsules_per_box must be > 0", prod.ID))
+		if prod.UnitsPerBox <= 0 {
+			ve.add(fmt.Sprintf("product %q: units_per_box must be > 0", prod.ID))
 		}
 	}
 
@@ -209,7 +209,7 @@ func ValidateInput(input Input) error {
 		if _, ok := itemByID[se.ItemID]; !ok {
 			ve.add(fmt.Sprintf("current_stock: references unknown item %q", se.ItemID))
 		}
-		if se.Capsules < 0 {
+		if se.Units < 0 {
 			ve.add(fmt.Sprintf("current_stock for %q: capsules must be >= 0", se.ItemID))
 		}
 	}
