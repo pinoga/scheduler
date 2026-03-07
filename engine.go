@@ -59,8 +59,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 				candidates = append(candidates, ItemPlan{
 					Item:            item,
 					Plan:            cp,
-					UnitsPerDose: capsPerDose,
-					Fraction:        1.0,
+					Units:           float64(capsPerDose),
 					ConsumptionRate: consumptionRate,
 					CurrentCapsules: currentCaps,
 				})
@@ -86,7 +85,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 				continue
 			}
 
-			consumptionRate := float64(cp.UnitsPerDose) * cp.Fraction * activeFrac
+			consumptionRate := cp.Units * activeFrac
 			currentCaps := 0
 			if effectiveStock != nil {
 				currentCaps = effectiveStock[item.ID]
@@ -96,8 +95,7 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 				Candidates: []ItemPlan{{
 					Item:            item,
 					Plan:            cp,
-					UnitsPerDose: cp.UnitsPerDose,
-					Fraction:        cp.Fraction,
+					Units:           cp.Units,
 					ConsumptionRate: consumptionRate,
 					CurrentCapsules: currentCaps,
 				}},
@@ -118,7 +116,7 @@ func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, 
 	}
 	maxSupplyDays := float64(maxBoxes*product.CapsulesPerBox) / itemPlan.ConsumptionRate
 	costPerCapsule := ce.Price / float64(product.CapsulesPerBox)
-	costPerDose := costPerCapsule * float64(itemPlan.UnitsPerDose) * itemPlan.Fraction
+	costPerDose := costPerCapsule * itemPlan.Units
 
 	return ProductSupplierChoice{
 		Product:       product,

@@ -48,8 +48,8 @@ type Supplier struct {
 // Substance mode: Substance + Dosage. Engine finds any item matching the substance
 // whose dosage_per_unit divides the dosage evenly.
 //
-// Item mode: ItemID + UnitsPerDose + Fraction. References a specific item directly.
-// UnitsPerDose defaults to 1, Fraction defaults to 1.0.
+// Item mode: ItemID + Units. References a specific item directly.
+// Units defaults to 1.0.
 type ConsumptionPlan struct {
 	// Mode selection (exactly one must be set)
 	Substance string `json:"substance,omitempty"` // substance mode
@@ -59,8 +59,7 @@ type ConsumptionPlan struct {
 	Dosage float64 `json:"dosage,omitempty"` // required in substance mode
 
 	// Item mode fields
-	UnitsPerDose int     `json:"units,omitempty"` // default 1
-	Fraction     float64 `json:"fraction,omitempty"`
+	Units float64 `json:"units,omitempty"` // units per active day; default 1.0
 
 	// Common fields
 	Frequency string `json:"frequency"` // 3-field cron: "dom month dow"
@@ -96,9 +95,8 @@ type ParsedCron struct {
 type ItemPlan struct {
 	Item            Item
 	Plan            ConsumptionPlan
-	UnitsPerDose    int
-	Fraction        float64
-	ConsumptionRate float64 // units per day (= units_per_dose * fraction * active_day_fraction)
+	Units           float64 // units consumed per active day
+	ConsumptionRate float64 // units per day (= units * active_day_fraction)
 	CurrentCapsules int
 }
 

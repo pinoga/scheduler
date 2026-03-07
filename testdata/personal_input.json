@@ -253,7 +253,7 @@
     { "item_id": "glycine-1000mg", "units": 3, "frequency": "* * *" },
     { "item_id": "magnesium-l-threonate-144mg", "frequency": "* * *" },
     { "item_id": "bacopa-monnieri-24pct-300mg", "frequency": "* * *" },
-    { "item_id": "mirtazapine-15mg", "fraction": 0.25, "frequency": "* * *" },
+    { "item_id": "mirtazapine-15mg", "units": 0.25, "frequency": "* * *" },
     { "item_id": "creatine-3g", "frequency": "* * *" }
   ],
   "current_stock": [],

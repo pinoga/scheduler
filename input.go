@@ -39,13 +39,8 @@ func LoadInput(filePath string) (Input, error) {
 	for i := range input.ConsumptionPlans {
 		cp := &input.ConsumptionPlans[i]
 		// Item mode defaults.
-		if cp.ItemID != "" {
-			if cp.UnitsPerDose <= 0 {
-				cp.UnitsPerDose = 1
-			}
-			if cp.Fraction <= 0 {
-				cp.Fraction = 1.0
-			}
+		if cp.ItemID != "" && cp.Units <= 0 {
+			cp.Units = 1.0
 		}
 	}
 
@@ -203,11 +198,8 @@ func ValidateInput(input Input) error {
 				ve.add(fmt.Sprintf("%s: references unknown item", label))
 				continue
 			}
-			if cp.UnitsPerDose < 1 {
-				ve.add(fmt.Sprintf("%s: unit must be >= 1", label))
-			}
-			if cp.Fraction <= 0 || cp.Fraction > 1 {
-				ve.add(fmt.Sprintf("%s: fraction must be > 0 and <= 1", label))
+			if cp.Units <= 0 {
+				ve.add(fmt.Sprintf("%s: units must be > 0", label))
 			}
 		}
 	}
