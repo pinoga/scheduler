@@ -74,7 +74,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Error: creating output file: %v\n", err)
 			os.Exit(1)
 		}
-		defer f.Close()
+		defer f.Close() //nolint:errcheck // best-effort close on CLI exit
 		if err := WriteOutput(output, f); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)

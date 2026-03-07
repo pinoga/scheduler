@@ -1,0 +1,14 @@
+# Binary
+scheduler
+
+# State file
+.scheduler_state.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
