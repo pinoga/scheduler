@@ -2,21 +2,29 @@
   "last_run_date": "2026-03-07T00:00:00Z",
   "stock_at_last_run": [
     {
-      "item_id": "omega-3",
-      "units": 30
+      "item_id": "cycloastragenol-10pct-100mg",
+      "units": 80
     },
     {
-      "item_id": "magnesium",
-      "units": 60
+      "item_id": "nmn-250mg",
+      "units": 80
     },
     {
-      "item_id": "ashwagandha",
-      "units": 45
+      "item_id": "lions-mane-500mg",
+      "units": 71
     },
     {
-      "item_id": "vitamin-d",
+      "item_id": "huperzine-a-200mcg",
       "units": 90
+    },
+    {
+      "item_id": "bacopa-monnieri-24pct-300mg",
+      "units": 160
+    },
+    {
+      "item_id": "citicoline-250mg",
+      "units": 160
     }
   ],
-  "input_hash": "2aa38b3c27c4f760bb60e7ad7782e7975c610b74fb8a5ee72707d3648c26c842"
+  "input_hash": "f32ee269070edf48a0a881a588172792c2b7347cb62aab863236283d0f673113"
 }

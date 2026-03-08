@@ -221,17 +221,17 @@
     },
     {
       "id": "mag-l-threonate-48mg-90",
-      "item_id": "magnesium-l-threonate-144mg",
+      "item_id": "magnesium-l-threonate-48mg",
       "units_per_box": 90
     },
     {
       "id": "mag-l-threonate-48mg-180",
-      "item_id": "magnesium-l-threonate-144mg",
+      "item_id": "magnesium-l-threonate-48mg",
       "units_per_box": 180
     },
     {
       "id": "mag-l-threonate-48mg-540",
-      "item_id": "magnesium-l-threonate-144mg",
+      "item_id": "magnesium-l-threonate-48mg",
       "units_per_box": 540
     },
     {
@@ -283,9 +283,9 @@
         { "product_id": "cycloastragenol-10pct-100mg-90", "price": 99.99, "currency": "USD", "delivery_days": 11 },
         { "product_id": "bacopa-24pct-300mg-120", "price": 24.99, "currency": "USD", "delivery_days": 11 },
         { "product_id": "bacopa-24pct-300mg-240", "price": 34.99, "currency": "USD", "delivery_days": 11 },
-        { "product_id": "mag-l-threonate-144mg-90", "price": 39.99, "currency": "USD", "delivery_days": 11 },
-        { "product_id": "mag-l-threonate-144mg-180", "price": 69.99, "currency": "USD", "delivery_days": 11 },
-        { "product_id": "mag-l-threonate-144mg-540", "price": 179.99, "currency": "USD", "delivery_days": 11 },
+        { "product_id": "mag-l-threonate-48mg-90", "price": 39.99, "currency": "USD", "delivery_days": 11 },
+        { "product_id": "mag-l-threonate-48mg-180", "price": 69.99, "currency": "USD", "delivery_days": 11 },
+        { "product_id": "mag-l-threonate-48mg-540", "price": 179.99, "currency": "USD", "delivery_days": 11 },
         { "product_id": "nko-krill-oil-softgel-60", "price": 29.99, "currency": "USD", "delivery_days": 11 },
         { "product_id": "nko-krill-oil-softgel-180", "price": 69.99, "currency": "USD", "delivery_days": 11 }
       ]
@@ -294,10 +294,10 @@
       "id": "pharmacy",
       "name": "Pharmacy",
       "catalog": [
-        { "product_id": "solgar-collagen-ha-120mg", "price": 49.99, "currency": "USD", "delivery_days": 1 },
-        { "product_id": "vitamin-d3-2000iu-k2-45mcg", "price": 20.00, "currency": "USD", "delivery_days": 1 },
-        { "product_id": "glycine-1000mg", "price": 20.00, "currency": "USD", "delivery_days": 1 },
-        { "product_id": "creatine-3g", "price": 40.00, "currency": "USD", "delivery_days": 1 },
+        { "product_id": "solgar-collagen-ha-120mg-30", "price": 49.99, "currency": "USD", "delivery_days": 1 },
+        { "product_id": "vitamin-d3-2000iu-k2-45mcg-120-now", "price": 20.00, "currency": "USD", "delivery_days": 1 },
+        { "product_id": "glycine-1000mg-180", "price": 20.00, "currency": "USD", "delivery_days": 1 },
+        { "product_id": "creatine-3g-100", "price": 40.00, "currency": "USD", "delivery_days": 1 },
         { "product_id": "brintellix-20mg-28", "price": 45.00, "currency": "USD", "delivery_days": 1 },
         { "product_id": "mirtazapine-15mg-30", "price": 8.00, "currency": "USD", "delivery_days": 1 }
       ]
@@ -317,27 +317,27 @@
   ],
   "current_stock": [
     {
-      "product_id": "lions-mane-500mg-180",
+      "item_id": "lions-mane-500mg",
       "units": 71
     },
     {
-      "product_id": "huperzine-a-200mcg-120",
+      "item_id": "huperzine-a-200mcg",
       "units": 90
     },
     {
-      "product_id": "bacopa-24pct-300mg-240",
+      "item_id": "bacopa-monnieri-24pct-300mg",
       "units": 160
     },
     {
-      "product_id": "citicoline-250mg-180-cognizin",
+      "item_id": "citicoline-250mg",
       "units": 160
     },
     {
-      "product_id": "cycloastragenol-10pct-100mg-90",
+      "item_id": "cycloastragenol-10pct-100mg",
       "units": 80
     },
     {
-      "product_id": "nmn-250mg-90",
+      "item_id": "nmn-250mg",
       "units": 80
     }
   ],
