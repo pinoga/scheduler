@@ -473,3 +473,37 @@ func BuildAllSchedules(input Input, groups []ItemPlanGroup, today time.Time) []S
 	}
 	return schedules
 }
+
+// ComputeSchedules is the main entry point for schedule computation.
+// It takes validated input, optional prior state, and today's date,
+// and returns all schedule alternatives.
+func ComputeSchedules(input Input, state *State, today time.Time) ([]Schedule, map[string]int) {
+	// First pass: build groups with zero stock to get consumption rates.
+	groupsForRates, _ := BuildItemPlanGroups(input, nil)
+	plansForRates := flattenGroups(groupsForRates)
+
+	// Compute effective stock (auto-decrement from state or use input).
+	effectiveStock := ComputeEffectiveStock(state, plansForRates, input.CurrentStock, today)
+
+	// Second pass: build groups with actual stock.
+	groups, planErrors := BuildItemPlanGroups(input, effectiveStock)
+
+	// Build all schedule alternatives.
+	schedules := BuildAllSchedules(input, groups, today)
+
+	// Attach plan-level errors to each schedule.
+	for i := range schedules {
+		schedules[i].Errors = append(schedules[i].Errors, planErrors...)
+	}
+
+	return schedules, effectiveStock
+}
+
+// flattenGroups extracts all candidate ItemPlans for stock decay computation.
+func flattenGroups(groups []ItemPlanGroup) []ItemPlan {
+	var plans []ItemPlan
+	for _, g := range groups {
+		plans = append(plans, g.Candidates...)
+	}
+	return plans
+}
