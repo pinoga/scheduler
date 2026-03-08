@@ -1,10 +1,6 @@
 {
-  "last_run_date": "2026-03-06T00:00:00Z",
+  "last_run_date": "2026-03-07T00:00:00Z",
   "stock_at_last_run": [
-    {
-      "item_id": "vitamin-d",
-      "units": 90
-    },
     {
       "item_id": "omega-3",
       "units": 30
@@ -16,7 +12,11 @@
     {
       "item_id": "ashwagandha",
       "units": 45
+    },
+    {
+      "item_id": "vitamin-d",
+      "units": 90
     }
   ],
-  "input_hash": "4dffe11e9f762b01752bccff8f82e8db2b89bc5c7ed2c524e568613959c79b72"
+  "input_hash": "2aa38b3c27c4f760bb60e7ad7782e7975c610b74fb8a5ee72707d3648c26c842"
 }

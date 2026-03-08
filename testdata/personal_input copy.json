@@ -95,9 +95,9 @@
       "max_stock_days": 60
     },
     {
-      "id": "magnesium-l-threonate-48mg",
-      "name": "Magnesium L-Threonate 48mg",
-      "dosage_per_unit": 48,
+      "id": "magnesium-l-threonate-144mg",
+      "name": "Magnesium L-Threonate 144mg",
+      "dosage_per_unit": 144,
       "unit": "mg",
       "max_stock_days": 60
     },
@@ -220,17 +220,17 @@
       "units_per_box": 180
     },
     {
-      "id": "mag-l-threonate-48mg-90",
+      "id": "mag-l-threonate-144mg-90",
       "item_id": "magnesium-l-threonate-144mg",
       "units_per_box": 90
     },
     {
-      "id": "mag-l-threonate-48mg-180",
+      "id": "mag-l-threonate-144mg-180",
       "item_id": "magnesium-l-threonate-144mg",
       "units_per_box": 180
     },
     {
-      "id": "mag-l-threonate-48mg-540",
+      "id": "mag-l-threonate-144mg-540",
       "item_id": "magnesium-l-threonate-144mg",
       "units_per_box": 540
     },
@@ -305,40 +305,24 @@
   ],
   "consumption_plans": [
     { "item_id": "vortioxetine-20mg", "units": 1, "frequency": "* * *" },
-    { "item_id": "mirtazapine-15mg", "units": 0.25, "frequency": "* * *" },
     { "item_id": "lions-mane-500mg", "units": 2, "frequency": "* * *" },
+    { "substance": "alpha-lipoic-acid", "dosage": 250, "frequency": "* * *" },
+    { "item_id": "solgar-collagen-ha-120mg", "frequency": "* * *" },
     { "item_id": "huperzine-a-200mcg", "frequency": "1,4,7,10,13,16,19,22,25,28 * *" },
     { "item_id": "citicoline-250mg", "units": 2, "frequency": "* * *" },
+    { "item_id": "vitamin-d3-2000iu-k2-45mcg", "units": 1, "frequency": "* * *" },
     { "item_id": "nmn-250mg", "units": 1, "frequency": "* * *" },
     { "item_id": "cycloastragenol-10pct-100mg", "units": 1, "frequency": "* * *" },
-    { "item_id": "magnesium-l-threonate-48mg", "units": 3, "frequency": "* * *" },
+    { "item_id": "glycine-1000mg", "units": 3, "frequency": "* * *" },
+    { "item_id": "magnesium-l-threonate-144mg", "units": 3, "frequency": "* * *" },
     { "item_id": "bacopa-monnieri-24pct-300mg", "units": 1, "frequency": "* * *" },
+    { "item_id": "mirtazapine-15mg", "units": 0.25, "frequency": "* * *" },
+    { "item_id": "creatine-3g", "units": 1, "frequency": "* * *" },
     { "item_id": "nko-krill-oil-softgel", "units": 1, "frequency": "* * *" }
   ],
   "current_stock": [
     {
-      "product_id": "lions-mane-500mg-180",
-      "units": 71
-    },
-    {
-      "product_id": "huperzine-a-200mcg-120",
-      "units": 90
-    },
-    {
-      "product_id": "bacopa-24pct-300mg-240",
-      "units": 160
-    },
-    {
-      "product_id": "citicoline-250mg-180-cognizin",
-      "units": 160
-    },
-    {
-      "product_id": "cycloastragenol-10pct-100mg-90",
-      "units": 80
-    },
-    {
-      "product_id": "nmn-250mg-90",
-      "units": 80
+
     }
   ],
   "headroom_days": 7
