@@ -141,18 +141,16 @@ func selectForCandidate(itemPlan ItemPlan, products []Product, offersByProduct m
 			if prod.ItemID != itemPlan.Item.ID {
 				continue
 			}
-			offers := offersByProduct[prod.ID]
-			if len(offers) == 0 {
-				continue
-			}
 			var best *ProductSupplierChoice
-			for _, o := range offers {
+			for _, o := range offersByProduct[prod.ID] {
 				choice := computeProductMetrics(itemPlan, prod, o.CatalogEntry, o.Supplier)
 				if best == nil || choice.CostPerDose < best.CostPerDose {
 					best = &choice
 				}
 			}
-			return best
+			if best != nil {
+				return best
+			}
 		}
 
 	case StrategyCheapest:
