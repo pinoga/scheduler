@@ -59,7 +59,7 @@ func ComputeInputHash(filePath string) (string, error) {
 //  1. If inputStock is non-empty, use it (user override).
 //  2. If state exists, auto-decrement from last known stock.
 //  3. Otherwise, return empty map (all items at 0).
-func ComputeEffectiveStock(state *State, itemPlans []ItemPlan, inputStock []StockEntry, today time.Time) map[string]int {
+func ComputeEffectiveStock(state *State, rateByItem map[string]float64, inputStock []StockEntry, today time.Time) map[string]int {
 	stock := make(map[string]int)
 
 	// Case 1: user provided current_stock.
@@ -79,12 +79,6 @@ func ComputeEffectiveStock(state *State, itemPlans []ItemPlan, inputStock []Stoc
 	elapsedDays := daysBetween(state.LastRunDate, today)
 	if elapsedDays < 0 {
 		elapsedDays = 0
-	}
-
-	// Build consumption rate lookup.
-	rateByItem := make(map[string]float64, len(itemPlans))
-	for _, ip := range itemPlans {
-		rateByItem[ip.Item.ID] = ip.ConsumptionRate
 	}
 
 	for _, se := range state.StockAtLastRun {

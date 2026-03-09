@@ -10,7 +10,7 @@ import (
 // BuildItemPlanGroups resolves consumption plans into groups of candidate ItemPlans.
 // Substance mode may produce multiple candidates (one per matching item).
 // Item mode always produces exactly one candidate.
-func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlanGroup, []ScheduleError) {
+func BuildItemPlanGroups(input Input) ([]ItemPlanGroup, []ScheduleError) {
 	itemByID := make(map[string]Item, len(input.Items))
 	for _, item := range input.Items {
 		itemByID[item.ID] = item
@@ -50,18 +50,11 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 					continue // this item can't divide the dosage evenly
 				}
 
-				consumptionRate := float64(unitsPerDose) * activeFrac
-				currentStock := 0
-				if effectiveStock != nil {
-					currentStock = effectiveStock[item.ID]
-				}
-
 				candidates = append(candidates, ItemPlan{
-					Item:            item,
-					Plan:            cp,
-					Units:           float64(unitsPerDose),
-					ConsumptionRate: consumptionRate,
-					CurrentStock:    currentStock,
+					Item:                 item,
+					Plan:                 cp,
+					Units:                float64(unitsPerDose),
+					DailyConsumptionRate: float64(unitsPerDose) * activeFrac,
 				})
 			}
 
@@ -85,19 +78,12 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 				continue
 			}
 
-			consumptionRate := cp.Units * activeFrac
-			currentStock := 0
-			if effectiveStock != nil {
-				currentStock = effectiveStock[item.ID]
-			}
-
 			groups = append(groups, ItemPlanGroup{
 				Candidates: []ItemPlan{{
-					Item:            item,
-					Plan:            cp,
-					Units:           cp.Units,
-					ConsumptionRate: consumptionRate,
-					CurrentStock:    currentStock,
+					Item:                 item,
+					Plan:                 cp,
+					Units:                cp.Units,
+					DailyConsumptionRate: cp.Units * activeFrac,
 				}},
 				Label: cp.ItemID,
 			})
@@ -109,12 +95,12 @@ func BuildItemPlanGroups(input Input, effectiveStock map[string]int) ([]ItemPlan
 
 // computeProductMetrics calculates supply metrics for a product given an item's consumption rate.
 func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, supplier Supplier) ProductSupplierChoice {
-	daysPerBox := float64(product.UnitsPerBox) / itemPlan.ConsumptionRate
-	maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.ConsumptionRate / float64(product.UnitsPerBox)))
+	daysPerBox := float64(product.UnitsPerBox) / itemPlan.DailyConsumptionRate
+	maxBoxes := int(math.Floor(float64(itemPlan.Item.MaxStockDays) * itemPlan.DailyConsumptionRate / float64(product.UnitsPerBox)))
 	if maxBoxes < 1 {
 		maxBoxes = 1
 	}
-	maxSupplyDays := float64(maxBoxes*product.UnitsPerBox) / itemPlan.ConsumptionRate
+	maxSupplyDays := float64(maxBoxes*product.UnitsPerBox) / itemPlan.DailyConsumptionRate
 	costPerUnit := ce.Price / float64(product.UnitsPerBox)
 	costPerDose := costPerUnit * itemPlan.Units
 
@@ -131,7 +117,7 @@ func computeProductMetrics(itemPlan ItemPlan, product Product, ce CatalogEntry, 
 
 // selectForCandidate finds the best product+supplier for a single ItemPlan candidate.
 func selectForCandidate(itemPlan ItemPlan, products []Product, offersByProduct map[string][]supplierOffer, strategy SelectionStrategy) *ProductSupplierChoice {
-	if itemPlan.ConsumptionRate <= 0 {
+	if itemPlan.DailyConsumptionRate <= 0 {
 		return nil
 	}
 
@@ -200,7 +186,7 @@ type itemAssignment struct {
 }
 
 // BuildSchedule constructs a single schedule using the given selection strategy.
-func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, products []Product, suppliers []Supplier, headroomDays int, today time.Time, strategy SelectionStrategy) Schedule {
+func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, products []Product, suppliers []Supplier, stock map[string]int, headroomDays int, today time.Time, strategy SelectionStrategy) Schedule {
 	// Build catalog index once.
 	offersByProduct := make(map[string][]supplierOffer)
 	for _, sup := range suppliers {
@@ -315,7 +301,7 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 		}
 		var orders []itemOrder
 		for _, a := range g.Assignments {
-			unitsNeeded := a.ItemPlan.ConsumptionRate * float64(intervalDays)
+			unitsNeeded := a.ItemPlan.DailyConsumptionRate * float64(intervalDays)
 			boxes := int(math.Ceil(unitsNeeded / float64(a.Choice.Product.UnitsPerBox)))
 			if boxes > a.Choice.MaxBoxes {
 				boxes = a.Choice.MaxBoxes
@@ -331,8 +317,8 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 		for _, o := range orders {
 			deliveryDays := o.Assignment.Choice.CatalogEntry.DeliveryDays
 			daysOfStock := 0.0
-			if o.Assignment.ItemPlan.ConsumptionRate > 0 {
-				daysOfStock = float64(o.Assignment.ItemPlan.CurrentStock) / o.Assignment.ItemPlan.ConsumptionRate
+			if o.Assignment.ItemPlan.DailyConsumptionRate > 0 {
+				daysOfStock = float64(stock[o.Assignment.ItemPlan.Item.ID]) / o.Assignment.ItemPlan.DailyConsumptionRate
 			}
 			daysUntilReorder := daysOfStock - float64(headroomDays) - float64(deliveryDays)
 			if daysUntilReorder < earliestReorder {
@@ -356,14 +342,14 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 		var initialProducts []ProductOrder
 		for _, o := range orders {
 			daysUntilPurchase := math.Floor(earliestReorder)
-			unitsConsumedWaiting := o.Assignment.ItemPlan.ConsumptionRate * daysUntilPurchase
-			remainingAtPurchase := float64(o.Assignment.ItemPlan.CurrentStock) - unitsConsumedWaiting
+			unitsConsumedWaiting := o.Assignment.ItemPlan.DailyConsumptionRate * daysUntilPurchase
+			remainingAtPurchase := float64(stock[o.Assignment.ItemPlan.Item.ID]) - unitsConsumedWaiting
 			if remainingAtPurchase < 0 {
 				remainingAtPurchase = 0
 			}
 
 			totalCoverageDays := float64(intervalDays) + float64(o.Assignment.Choice.CatalogEntry.DeliveryDays)
-			unitsNeeded := o.Assignment.ItemPlan.ConsumptionRate*totalCoverageDays - remainingAtPurchase
+			unitsNeeded := o.Assignment.ItemPlan.DailyConsumptionRate*totalCoverageDays - remainingAtPurchase
 			initialBoxes := int(math.Ceil(unitsNeeded / float64(o.Assignment.Choice.Product.UnitsPerBox)))
 			if initialBoxes < 1 {
 				initialBoxes = 1
@@ -456,7 +442,7 @@ func BuildSchedule(scheduleID int, description string, groups []ItemPlanGroup, p
 }
 
 // BuildAllSchedules generates three schedules: preferred, cheapest, fastest.
-func BuildAllSchedules(input Input, groups []ItemPlanGroup, today time.Time) []Schedule {
+func BuildAllSchedules(input Input, groups []ItemPlanGroup, stock map[string]int, today time.Time) []Schedule {
 	strategies := []struct {
 		Strategy    SelectionStrategy
 		Description string
@@ -468,7 +454,7 @@ func BuildAllSchedules(input Input, groups []ItemPlanGroup, today time.Time) []S
 
 	var schedules []Schedule
 	for i, s := range strategies {
-		sched := BuildSchedule(i+1, s.Description, groups, input.Products, input.Suppliers, input.HeadroomDays, today, s.Strategy)
+		sched := BuildSchedule(i+1, s.Description, groups, input.Products, input.Suppliers, stock, input.HeadroomDays, today, s.Strategy)
 		schedules = append(schedules, sched)
 	}
 	return schedules
@@ -478,18 +464,13 @@ func BuildAllSchedules(input Input, groups []ItemPlanGroup, today time.Time) []S
 // It takes validated input, optional prior state, and today's date,
 // and returns all schedule alternatives.
 func ComputeSchedules(input Input, state *State, today time.Time) ([]Schedule, map[string]int) {
-	// First pass: build groups with zero stock to get consumption rates.
-	groupsForRates, _ := BuildItemPlanGroups(input, nil)
-	plansForRates := flattenGroups(groupsForRates)
+	groups, planErrors := BuildItemPlanGroups(input)
 
-	// Compute effective stock (auto-decrement from state or use input).
-	effectiveStock := ComputeEffectiveStock(state, plansForRates, input.CurrentStock, today)
-
-	// Second pass: build groups with actual stock.
-	groups, planErrors := BuildItemPlanGroups(input, effectiveStock)
+	// Compute effective stock.
+	effectiveStock := ComputeEffectiveStock(state, extractRates(groups), input.CurrentStock, today)
 
 	// Build all schedule alternatives.
-	schedules := BuildAllSchedules(input, groups, today)
+	schedules := BuildAllSchedules(input, groups, effectiveStock, today)
 
 	// Attach plan-level errors to each schedule.
 	for i := range schedules {
@@ -499,11 +480,13 @@ func ComputeSchedules(input Input, state *State, today time.Time) ([]Schedule, m
 	return schedules, effectiveStock
 }
 
-// flattenGroups extracts all candidate ItemPlans for stock decay computation.
-func flattenGroups(groups []ItemPlanGroup) []ItemPlan {
-	var plans []ItemPlan
+// extractRates returns item ID → consumption rate from resolved groups.
+func extractRates(groups []ItemPlanGroup) map[string]float64 {
+	rates := make(map[string]float64)
 	for _, g := range groups {
-		plans = append(plans, g.Candidates...)
+		for _, c := range g.Candidates {
+			rates[c.Item.ID] = c.DailyConsumptionRate
+		}
 	}
-	return plans
+	return rates
 }

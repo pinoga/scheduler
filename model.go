@@ -93,11 +93,10 @@ type ParsedCron struct {
 // ---------- Computed intermediates (not serialized) ----------
 
 type ItemPlan struct {
-	Item            Item
-	Plan            ConsumptionPlan
-	Units           float64 // units consumed per active day
-	ConsumptionRate float64 // units per day (= units * active_day_fraction)
-	CurrentStock    int
+	Item                 Item
+	Plan                 ConsumptionPlan
+	Units                float64 // units consumed per active day
+	DailyConsumptionRate float64 // units per day (= units * active_day_fraction)
 }
 
 // ItemPlanGroup holds one or more candidate ItemPlans for a single consumption plan.
